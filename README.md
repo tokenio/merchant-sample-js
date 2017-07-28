@@ -1,5 +1,7 @@
 ## Token Merchant Checkout Sample
 
+### Setup
+
 To install:
 
 `npm install`
@@ -21,3 +23,11 @@ To run the server:
 3. run `node server.js`
 
 4. Test by going to localhost:3000, and paying with the "Token PSD2" app, installed from the App Store
+
+### Troubleshooting
+
+If anything goes wrong, try to update the token SDK dependency:
+
+`npm update token-io`
+
+Otherwise, email Token support: support@token.io, or one of the Token engineers.

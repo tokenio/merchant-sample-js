@@ -6,10 +6,10 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
  // Connect to Token's development sandbox
 var TokenLib = require("token-io/dist/token-io.node.js");
-var Token = new TokenLib('sbx', './keys');
+var Token = new TokenLib('sandbox', './keys');
 
 // Initializes the server..
-var member = Token.login(Token.UnsecuredFileCryptoEngine, 'm:4DjRgwNWdDAqQWo5gyCMn71mtEn2:5zKtXEAq');
+var member = Token.login(Token.UnsecuredFileCryptoEngine, 'm:3crJYNuoRHxvYnbtTdYUyHMEB8bX:5zKtXEAq');
 console.log('Logged in as: ', member.memberId());
 
 // Endpoint for transferring, called by client side after user approval

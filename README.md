@@ -12,7 +12,8 @@ Type `node` and enter the following commands, replacing the username and key dir
 
 * `var TokenLib = require("token-io/dist/token-io.node.js");`
 * `var Token = new TokenLib('sandbox', './keys');`
-* `Token.createMember('marianoTest5', Token.UnsecuredFileCryptoEngine)`
+* `var alias = {type: 'USERNAME', value: 'mariano876'};`
+* `Token.createMember(alias, Token.UnsecuredFileCryptoEngine)`
 
 To run the server:
 

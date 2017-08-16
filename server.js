@@ -15,9 +15,11 @@ console.log('Logged in as: ', member.memberId());
 // Endpoint for transferring, called by client side after user approval
 app.post('/transfer', urlencodedParser, function (req, res) {
   console.log('User request', req.body);
-  member.getToken(req.body.tokenId)  // Make sure to get the token first, and check it's validity
+  // Get the token first and check its validity
+  member.getToken(req.body.tokenId)
     .then(function (token) {
-        member.redeemToken(token, 4.99, 'EUR')  // Redeem the token at the server, to move the funds
+        // Redeem the token to move the funds
+        member.redeemToken(token, 4.99, 'EUR')
           .then(function (res) {
               console.log('\n Reedeem Token Response:', res);
           });

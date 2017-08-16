@@ -1,5 +1,11 @@
 ## Token Merchant Checkout Sample
 
+This sample app shows how to integrate the Token Merchant Quick Checkout
+button into a merchant's website.
+You can learn more about the Quick Checkout flow and relevant APIs at the
+[Merchant Quick Checkout](http://developer-beta.token.io/merchant-checkout/)
+documentation.
+
 ### Setup
 
 To install:

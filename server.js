@@ -12,9 +12,7 @@ var Token = new TokenLib('sandbox', './keys');
 var member = Token.login(
     Token.UnsecuredFileCryptoEngine,
     'm:2qHBZCY8mR487pz8aNxV3DntT4eV:5zKtXEAq');
-console.log(
-    'Logged in as: ',
-    member.memberId());
+console.log('Logged in as: ', member.memberId());
 
 var destinations = [{
     account: {

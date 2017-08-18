@@ -11,8 +11,16 @@ var Token = new TokenLib('sandbox', './keys');
 // Initializes the server..
 var member = Token.login(
     Token.UnsecuredFileCryptoEngine,
-    'm:3gsxtGWZK1zYn6o32F7qn77y1AQx:5zKtXEAq');
-console.log('Logged in as: ', member.memberId());
+    'm:2qHBZCY8mR487pz8aNxV3DntT4eV:5zKtXEAq');
+console.log(
+    'Logged in as: ',
+    member.memberId());
+
+var destinations = [{
+    account: {
+        sepa: {iban: 'DK5000440441116263'}
+    }
+}];
 
 // Endpoint for transferring, called by client side after user approval
 app.post('/transfer', urlencodedParser, function (req, res) {
@@ -21,7 +29,7 @@ app.post('/transfer', urlencodedParser, function (req, res) {
   member.getToken(req.body.tokenId)
     .then(function (token) {
         // Redeem the token to move the funds
-        member.redeemToken(token, 4.99, 'EUR')
+        member.redeemToken(token, 4.99, 'EUR', 'Order 123', destinations)
           .then(function (res) {
               console.log('\n Reedeem Token Response:', res);
           });

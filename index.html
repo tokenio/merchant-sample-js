@@ -1,10 +1,10 @@
 <html>
   <head>
-    <script src="https://web-app.sandbox.token.io/token.js"></script>
+    <script src="https://web-app.sandbox.token.io/token.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   </head>
   <body>
-    <button id="tokenPayBtn">Quick Checkout</button>
+    <div id="tokenPayBtn" style="width:200px"></div>
 
     <script>
       'use strict';
@@ -21,24 +21,18 @@
             tax: 0
         });
       }
-
-      // Initializes the Quick Checkout Button
-      Token.bindPayButton(
-         'tokenPayBtn',                  // ID of the page's button element
-         {                               // Terms
-	     alias: { 
-	  	 type: 'USERNAME',       // Merchant alias
-		 value: 'mariano876'
-	     },
+      Token.styleButton({            // Sets up the Quick Checkout button
+          id: "tokenPayBtn",
+          label: "Token Quick Checkout"
+      }).bindPayButton(
+         {
+             alias: {
+                 type: 'USERNAME',
+                 value: 'mariano876'     // Merchant Alias
+             },
              amount: 4.99,               // Amount
              currency: 'EUR',            // Currency
-             destinations: [{            // Transfer destinations
-                 account: {
-                     sepa: {
-                         iban: 'DK5000440441116263'
-                     }
-                 }
-             }],
+             destinations: []
          },
          shippingCb,          // Shipping callback
          function(data) {     // Success callbackata);

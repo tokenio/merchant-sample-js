@@ -9,7 +9,7 @@ var TokenLib = require("token-io/dist/token-io.node.js");
 var Token = new TokenLib('sandbox', './keys');
 
 // Initializes the server..
-var member = Token.login(Token.UnsecuredFileCryptoEngine, 'm:22YAaUTEaGWXyKSJoN9pHdpNh43:5zKtXEAq');
+var member = Token.login(Token.UnsecuredFileCryptoEngine, 'm:2qHBZCY8mR487pz8aNxV3DntT4eV:5zKtXEAq');
 console.log('Logged in as: ', member.memberId());
 
 var destinations = [{

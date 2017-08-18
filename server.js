@@ -9,7 +9,9 @@ var TokenLib = require("token-io/dist/token-io.node.js");
 var Token = new TokenLib('sandbox', './keys');
 
 // Initializes the server..
-var member = Token.login(Token.UnsecuredFileCryptoEngine, 'm:3gsxtGWZK1zYn6o32F7qn77y1AQx:5zKtXEAq');
+var member = Token.login(
+    Token.UnsecuredFileCryptoEngine,
+    'm:3gsxtGWZK1zYn6o32F7qn77y1AQx:5zKtXEAq');
 console.log('Logged in as: ', member.memberId());
 
 // Endpoint for transferring, called by client side after user approval

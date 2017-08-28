@@ -3,8 +3,7 @@
 This sample app shows how to integrate the Token Merchant Quick Checkout
 button into a merchant's website.
 You can learn more about the Quick Checkout flow and relevant APIs at the
-[Merchant Quick Checkout](http://developer-beta.token.io/merchant-checkout/)
-documentation.
+[Merchant Quick Checkout documentation](http://developer-beta.token.io/merchant-checkout/).
 
 ### Setup
 
@@ -29,7 +28,9 @@ To run the server:
 
 3. run `node server.js`
 
-4. Test by going to localhost:3000, and paying with the "Token PSD2" app, installed from the App Store
+4. Test by going to localhost:3000.
+   You can't get far until you create a customer member as described at the
+   [Merchant Quick Checkout documentation](http://developer-beta.token.io/merchant-checkout/).
 
 ### Troubleshooting
 

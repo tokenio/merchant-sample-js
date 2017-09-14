@@ -34,7 +34,7 @@
              currency: 'EUR',            // Currency
              destinations: []
          },
-         shippingCb,          // Shipping callback
+         shippingCb,          // Shipping callback (null for "virtual" goods)
          function(data) {     // Success callbackata);
              $.post('http://localhost:3000/transfer', data);
          },

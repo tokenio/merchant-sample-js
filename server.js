@@ -11,7 +11,7 @@ var Token = new TokenLib('sandbox', './keys');
 // Initializes the server..
 var member = Token.login(
     Token.UnsecuredFileCryptoEngine,
-    'm:2qHBZCY8mR487pz8aNxV3DntT4eV:5zKtXEAq');
+    'm:3UPKC9ybzuKauwxVSsBiLbcEaj6k:5zKtXEAq');
 console.log('Logged in as: ', member.memberId());
 
 var destinations = [{

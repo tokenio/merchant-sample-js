@@ -10,7 +10,7 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
  // Connect to Token's development sandbox
 var TokenLib = require("token-io/dist/token-io.node.js");
-var Token = new TokenLib('sandbox', './keys');
+var Token = new TokenLib('sandbox', '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI','./keys');
 
 // Initializes the server.
 

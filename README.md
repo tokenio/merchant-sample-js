@@ -16,7 +16,7 @@ To create a member:
 Type `node` and enter the following commands, replacing the username and key dir with your own.
 
 * `var TokenLib = require("token-io/dist/token-io.node.js");`
-* `var Token = new TokenLib('sandbox', './keys');`
+* `var Token = new TokenLib('sandbox','4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', './keys');`
 * `var alias = {type: 'USERNAME', value: 'mariano876'};`
 * `Token.createMember(alias, Token.UnsecuredFileCryptoEngine)`
 

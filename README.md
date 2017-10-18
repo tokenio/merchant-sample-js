@@ -13,22 +13,22 @@ To install:
 
 To create a member:
 
-Type `node` and enter the following commands, replacing the username and key dir with your own.
+Type `node` and enter the following commands, replacing the email
+address and key dir with your own.
 
 * `var TokenLib = require("token-io/dist/token-io.node.js");`
 * `var Token = new TokenLib('sandbox','4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', './keys');`
-* `var alias = {type: 'USERNAME', value: 'mariano876'};`
+* `var alias = {type: 'EMAIL', value: 'mariano876@example.com'};`
 * `Token.createMember(alias, Token.UnsecuredFileCryptoEngine)`
 
 To run the server:
 
-1. Change the username to the one used above, index.html
+1. In server.js, change the email address to the one you used above.
+   If you didn't use ./keys as the key dir above, it that in server.js also.
 
-2. Change the memberId in server.js to the filename in the your keys directory, replacing the underscores _ with colons :
+2. run `node server.js`
 
-3. run `node server.js`
-
-4. Test by going to localhost:3000.
+3. Test by going to localhost:3000.
    You can't get far until you create a customer member as described at the
    [Merchant Quick Checkout documentation](http://developer.token.io/merchant-checkout/).
 

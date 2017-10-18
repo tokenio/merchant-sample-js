@@ -1,18 +1,29 @@
 'use strict';
+
+const address = 'mariano876@example.com';
+
 var express = require('express')
+const fs = require('fs')
 var app = express()
 var bodyParser = require('body-parser');
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
  // Connect to Token's development sandbox
 var TokenLib = require("token-io/dist/token-io.node.js");
-var Token = new TokenLib('sandbox', './keys');
+var Token = new TokenLib('sandbox', '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI','./keys');
 
-// Initializes the server..
-var member = Token.login(
-    Token.UnsecuredFileCryptoEngine,
-    'm:3UPKC9ybzuKauwxVSsBiLbcEaj6k:5zKtXEAq');
-console.log('Logged in as: ', member.memberId());
+// Initializes the server.
+
+var member; // merchant member
+Token.resolveAlias({ // look up merchant member's ID by address...
+    type: 'EMAIL',
+    value: address
+}).then( function(structWithMemberId) { // ...and log in using keys
+    member = Token.login(
+        Token.UnsecuredFileCryptoEngine,
+        structWithMemberId.id);
+    console.log('Logged in as: ', member.memberId());
+});
 
 var destinations = [{
     account: {
@@ -34,9 +45,12 @@ app.post('/transfer', urlencodedParser, function (req, res) {
     });
 })
 
-// Returns HTML file
+// Returns HTML file with {alias} replaced by email address
 app.get('/', function (req, res) {
-  res.sendFile('index.html', {root: __dirname });
+    fs.readFile('index.html', 'utf8', function (err, contents) {
+        res.set('Content-Type', 'text/html');
+        res.send(contents.replace(/{alias}/g, address));
+    })
 })
 
 // Starts the server

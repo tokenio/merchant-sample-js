@@ -16,10 +16,15 @@ To create a member:
 Type `node` and enter the following commands, replacing the email
 address and key dir with your own.
 
-* `var TokenLib = require("token-io/dist/token-io.node.js");`
-* `var Token = new TokenLib('sandbox','4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', './keys');`
-* `var alias = {type: 'EMAIL', value: 'mariano876@example.com'};`
-* `Token.createMember(alias, Token.UnsecuredFileCryptoEngine)`
+```
+var TokenLib = require("token-io/dist/token-io.node.js");
+
+var Token = new TokenLib('sandbox','4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', './keys');
+
+var alias = {type: 'EMAIL', value: 'mariano876@example.com'};
+
+Token.createMember(alias, Token.UnsecuredFileCryptoEngine);
+```
 
 To run the server:
 

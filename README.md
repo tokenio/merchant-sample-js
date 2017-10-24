@@ -21,7 +21,7 @@ var TokenLib = require("token-io/dist/token-io.node.js");
 
 var Token = new TokenLib('sandbox','4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', './keys');
 
-var alias = {type: 'EMAIL', value: 'mariano876@example.com'};
+var alias = {type: 'EMAIL', value: 'mariano876+noverify@example.com'};
 
 Token.createMember(alias, Token.UnsecuredFileCryptoEngine);
 ```
@@ -29,7 +29,7 @@ Token.createMember(alias, Token.UnsecuredFileCryptoEngine);
 To run the server:
 
 1. In server.js, change the email address to the one you used above.
-   If you didn't use ./keys as the key dir above, it that in server.js also.
+   If you didn't use ./keys as the key dir above, change it in server.js also.
 
 2. run `node server.js`
 

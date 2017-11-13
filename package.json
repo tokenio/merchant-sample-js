@@ -2,6 +2,10 @@
   "name": "merchant-sample",
   "version": "1.0.0",
   "description": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tokenio/merchant-sample-js.git"
+  },
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -12,6 +16,6 @@
   "dependencies": {
     "body-parser": "^1.17.2",
     "express": "^4.15.4",
-    "token-io": "^1.4.98"
+    "token-io": "^1.4.100"
   }
 }

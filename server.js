@@ -27,7 +27,10 @@ Token.resolveAlias({ // look up merchant member's ID by address...
 
 var destinations = [{
     account: {
-        sepa: {iban: 'DK5000440441116263'}
+        sepa: {
+            bic: 'IRONUSCA000',
+            iban: 'DK5000440441116263'
+        }
     }
 }];
 

@@ -16,6 +16,6 @@
   "dependencies": {
     "body-parser": "^1.17.2",
     "express": "^4.15.4",
-    "token-io": "^1.4.104"
+    "token-io": "^1.4.105"
   }
 }

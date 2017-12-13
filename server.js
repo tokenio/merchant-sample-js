@@ -18,11 +18,11 @@ var member; // merchant member
 Token.resolveAlias({ // look up merchant member's ID by address...
     type: 'EMAIL',
     value: address
-}).then( function(structWithMemberId) { // ...and log in using keys
-    member = Token.login(
+}).then( function(structWithMemberId) { // ...and use that member, loading keys
+    member = Token.getMember(
         Token.UnsecuredFileCryptoEngine,
         structWithMemberId.id);
-    console.log('Logged in as: ', member.memberId());
+    console.log('Using member with ID: ', member.memberId());
 });
 
 var destinations = [{

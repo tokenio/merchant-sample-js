@@ -70,6 +70,9 @@ if (member) {
     member.firstAlias().then(function (alias) {
         // launch server
         initServer(member, alias);
+    }, function (err) {
+        console.log("Something went wrong: " + err);
+        console.log("If member ID not found, `rm -r ./keys` and try again.");
     });
 } else {
     // Didn't find an existing merchant member. Create a new one.

@@ -1,4 +1,4 @@
-## Token Merchant Checkout Sample
+## Token Merchant Checkout Sample: Javascript
 
 This sample app shows how to integrate the Token Merchant Quick Checkout
 button into a merchant's website.
@@ -7,38 +7,29 @@ You can learn more about the Quick Checkout flow and relevant APIs at the
 
 ### Setup
 
-To install:
+To install, `npm install`
 
-`npm install`
+To run, `node server.js`
 
-To create a member:
+This starts up a server.
 
-Type `node` and enter the following commands, replacing the email
-address and key dir with your own.
+The first time you run the server, it creates a new Member (Token user account).
+It saves the Member's private keys in the `keys` directory.
+In subsequent runs, the server uses this ID these keys to log the Member in.
 
-```
-var TokenLib = require("token-io/dist/token-io.node.js");
+The server operates in Token's Sandbox environment. This testing environment
+lets you try out UI and payment flows without moving real money.
 
-var Token = new TokenLib('sandbox','4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', './keys');
+The server shows a web page at `localhost:3000`. The page has a checkout button.
+Clicking the button starts the Token merchant payment flow.
+The server handles endorsed payments by redeeming tokens.
 
-var alias = {type: 'EMAIL', value: 'mariano876+noverify@example.com'};
+Test by going to `localhost:3000`.
+You can't get far until you create a customer member as described at the
+[Merchant Quick Checkout documentation](https://developer.token.io/merchant-checkout/).
 
-Token.createMember(alias, Token.UnsecuredFileCryptoEngine);
-```
-
-To run the server:
-
-1. In server.js, change the email address to the one you used above.
-   If you didn't use ./keys as the key dir above, change it in server.js also.
-
-2. run `node server.js`
-
-3. Test by going to localhost:3000.
-   You can't get far until you create a customer member as described at the
-   [Merchant Quick Checkout documentation](http://developer.token.io/merchant-checkout/).
-
-This code uses a publicly-known developer key (the second parameter to
-`new TokenLib`). This normally works, but don't be surprised if
+This code uses a publicly-known developer key (the devKey line in the
+initializeSDK method). This normally works, but don't be surprised if
 it's sometimes rate-limited or disabled. If your organization will do
 more Token development and doesn't already have a developer key, contact
 Token to get one.

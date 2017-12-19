@@ -1,7 +1,5 @@
 'use strict';
 
-const address = 'mariano876+noverify@example.com';
-
 var express = require('express')
 const fs = require('fs')
 var app = express()
@@ -12,51 +10,76 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false })
 var TokenLib = require("token-io/dist/token-io.node.js");
 var Token = new TokenLib('sandbox', '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI','./keys');
 
-// Initializes the server.
-
 var member; // merchant member
-Token.resolveAlias({ // look up merchant member's ID by address...
-    type: 'EMAIL',
-    value: address
-}).then( function(structWithMemberId) { // ...and use that member, loading keys
-    member = Token.getMember(
-        Token.UnsecuredFileCryptoEngine,
-        structWithMemberId.id);
-    console.log('Using member with ID: ', member.memberId());
-});
 
-var destinations = [{
-    account: {
-        sepa: {
-            bic: 'IRONUSCA000',
-            iban: 'DK5000440441116263'
-        }
-    }
-}];
-
-// Endpoint for transferring, called by client side after user approval
-app.post('/transfer', urlencodedParser, function (req, res) {
-  console.log('User request', req.body);
-  // Get the token first and check its validity
-  member.getToken(req.body.tokenId)
-    .then(function (token) {
-        // Redeem the token to move the funds
-        member.redeemToken(token, 4.99, 'EUR', 'Order 123', destinations)
-          .then(function (res) {
-              console.log('\n Reedeem Token Response:', res);
-          });
-    });
-})
-
-// Returns HTML file with {alias} replaced by email address
-app.get('/', function (req, res) {
-    fs.readFile('index.html', 'utf8', function (err, contents) {
-        res.set('Content-Type', 'text/html');
-        res.send(contents.replace(/{alias}/g, address));
+function initServer(member, alias) {
+    const address = alias.value;
+    // Returns HTML file with {alias} replaced by email address
+    app.get('/', function (req, res) {
+        fs.readFile('index.html', 'utf8', function (err, contents) {
+            res.set('Content-Type', 'text/html');
+            res.send(contents.replace(/{alias}/g, address));
+        })
     })
-})
+    var destinations = [{
+        account: {
+            sepa: {
+                bic: 'IRONUSCA000',
+                iban: 'DK5000440441116263'
+            }
+        }
+    }];
 
-// Starts the server
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!')
-})
+    // Endpoint for transferring, called by client side after user approval
+    app.post('/transfer', urlencodedParser, function (req, res) {
+        console.log('User request', req.body);
+        // Get the token first and check its validity
+        member.getToken(req.body.tokenId)
+            .then(function (token) {
+                // Redeem the token to move the funds
+                member.redeemToken(token, 4.99, 'EUR', 'Order 123', destinations)
+                    .then(function (res) {
+                        console.log('\n Reedeem Token Response:', res);
+                    });
+            });
+    });
+    app.listen(3000, function () {
+        console.log('Example app listening on port 3000!')
+    })
+}
+
+// If we know of a previously-created merchant member, load it; else create a new one.
+
+// Token SDK stores member keys in files in ./keys.
+// If merchant member's ID is "m:1234:567", its key file is "m_1234_567".
+var keyPaths;
+try {
+    keyPaths = fs.readdirSync('./keys');
+} catch (x) {
+    keyPaths = [];
+}
+for (var i = 0; i < keyPaths.length; i++) {
+    const keyPath = keyPaths[i];
+    const mid = keyPath.replace(/_/g, ":");
+    member = Token.getMember(Token.UnsecuredFileCryptoEngine, mid);
+}
+
+// If member is defined, that means we found keys and loaded them.
+if (member) {
+    // We're using an existing merchant member. Fetch its alias (email address)
+    member.firstAlias().then(function (alias) {
+        // launch server
+        initServer(member, alias);
+    });
+} else {
+    // Didn't find an existing merchant member. Create a new one.
+    const alias = {
+        type: 'EMAIL',
+        value: "msjs-" + Math.random().toString(36).substring(2, 10) + "+noverify@example.com"
+    };
+    Token.createMember(alias, Token.UnsecuredFileCryptoEngine).then(function(m) {
+        member = m;
+        // launch server
+        initServer(member, alias);
+    });
+}

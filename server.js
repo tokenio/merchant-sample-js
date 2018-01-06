@@ -58,8 +58,8 @@ try {
 } catch (x) {
     keyPaths = [];
 }
-for (var i = 0; i < keyPaths.length; i++) {
-    const keyPath = keyPaths[i];
+if (keyPaths && keyPaths.length) {
+    const keyPath = keyPaths[0];
     const mid = keyPath.replace(/_/g, ":");
     member = Token.getMember(Token.UnsecuredFileCryptoEngine, mid);
 }
@@ -72,7 +72,7 @@ if (member) {
         initServer(member, alias);
     }, function (err) {
         console.log("Something went wrong: " + err);
-        console.log("If member ID not found, `rm -r ./keys` and try again.");
+        console.log("If member ID not found or firstAlias fails, `rm -r ./keys` and try again.");
     });
 } else {
     // Didn't find an existing merchant member. Create a new one.

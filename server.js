@@ -21,14 +21,6 @@ function initServer(member, alias) {
             res.send(contents.replace(/{alias}/g, address));
         })
     })
-    var destinations = [{
-        account: {
-            sepa: {
-                bic: 'IRONUSCA000',
-                iban: 'DK5000440441116263'
-            }
-        }
-    }];
 
     // Endpoint for transferring, called by client side after user approval
     app.post('/transfer', urlencodedParser, function (req, res) {
@@ -37,7 +29,7 @@ function initServer(member, alias) {
         member.getToken(req.body.tokenId)
             .then(function (token) {
                 // Redeem the token to move the funds
-                member.redeemToken(token, 4.99, 'EUR', 'Order 123', destinations)
+                member.redeemToken(token, 4.99, 'EUR', 'Order 123')
                     .then(function (res) {
                         console.log('\n Reedeem Token Response:', res);
                     });

@@ -31,7 +31,7 @@ function initServer(member, alias) {
             .setDescription(form.description)
             .addDestination(form.destination)
             .setToAlias(alias)
-            .setToMemberId(member._id);
+            .setToMemberId(member.memberId);
         // set up the TokenRequest
         const tokenRequest = Token.TokenRequest.create(
             tokenBuilder.build(),

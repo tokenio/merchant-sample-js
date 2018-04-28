@@ -1,47 +1,11 @@
 <html>
   <head>
+    <link rel="stylesheet" type="text/css" href="/style.css"  />
     <script src="https://web-app.sandbox.token.io/token.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   </head>
   <body>
-    <div id="tokenPayBtn" style="width:200px"></div>
-
-    <script>
-      'use strict';
-      function shippingCb(address, tokenCallback) {
-        tokenCallback({                    // Can return different prices based on address
-            shippingMethods: [
-                {
-                    id: '0',
-                    name: 'Standard Ground (5-9 business days)',
-                    deliveryTime: '5 - 9 Business Days',
-                    cost: 0
-                },
-            ],
-            tax: 0
-        });
-      }
-      Token.styleButton({            // Sets up the Quick Checkout button
-          id: "tokenPayBtn",
-          label: "Token Quick Checkout"
-      }).bindPayButton(
-         {
-             alias: {
-                 type: 'EMAIL',
-                 value: '{alias}'        // address filled in by server.js
-             },
-             amount: 4.99,               // Amount
-             currency: 'EUR',            // Currency
-	     destinations: [{account: {sepa: { iban: "DE16700222000072880129"}}}]
-         },
-         shippingCb,          // Shipping callback (null for "virtual" goods)
-         function(data) {     // Success callbackata);
-             $.post('http://localhost:3000/transfer', data);
-         },
-         function(error) {    // Failure callback
-             console.log('Something\'s wrong!', error);
-         }
-       );
-  </script>
+    <button id="tokenPayBtn">Token Quick Checkout</button>
+    <script src="/client.js"><</script>
   </body>
 </html>

@@ -33,12 +33,8 @@ function initServer(member, alias) {
             .setToAlias(alias)
             .setToMemberId(member.memberId);
         // set up the TokenRequest
-        const tokenRequest = Token.TokenRequest.create(
-            tokenBuilder.build(),
-            null,
-            null,
-            'http://localhost:3000/redeem'
-        );
+        const tokenRequest = Token.TokenRequest.create(tokenBuilder.build())
+              .setRedirectUrl('http://localhost:3000/redeem');
         // store the token request
         member.storeTokenRequest(tokenRequest).then(function(request) {
             const requestId = request.id;

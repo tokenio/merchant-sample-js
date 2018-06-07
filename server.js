@@ -55,7 +55,7 @@ function initServer(member, alias) {
                             .then(function (transfer) {
                                 console.log('\n Reedeem Token Response:', transfer);
                                 res.status(200);
-                                res.redirect('http://localhost:3000');
+                                res.json(transfer)
                             });
                     })
             });

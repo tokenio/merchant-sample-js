@@ -90,7 +90,7 @@ function createPopupButton() {
 function getTokenRequestUrl(done) {
     var XHR = new XMLHttpRequest();
 
-    //set up the access request
+    //set up the transfer request
     XHR.open("POST", "http://localhost:3000/transfer", true);
 
     XHR.setRequestHeader("Content-Type", "application/json; charset=utf-8");
@@ -103,7 +103,7 @@ function getTokenRequestUrl(done) {
         destination: {account: {faster_payments: {sort_code: "123456", account_number: "12345678"}}}
     });
 
-    console.log(data);
+    console.log('data: ', data);
 
     // Define what happens on successful data submission
     XHR.addEventListener("load", function(event) {

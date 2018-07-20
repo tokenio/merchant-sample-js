@@ -29,7 +29,7 @@ function initServer(member, alias) {
         // set up the TokenTransferBuilder
         const tokenBuilder = member.createTransferTokenBuilder(form.amount, form.currency)
             .setDescription(form.description)
-            .addDestination( form.destination)
+            .addDestination(form.destination)
             .setToAlias(alias)
             .setToMemberId(member.memberId);
         // set up the TokenRequest

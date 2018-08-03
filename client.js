@@ -91,7 +91,7 @@ function getTokenRequestUrl(done) {
     var XHR = new XMLHttpRequest();
 
     //set up the transfer request
-    XHR.open("POST", "http://localhost:3000/transfer", true);
+    XHR.open('POST', 'http://localhost:3000/transfer', true);
 
     XHR.setRequestHeader("Content-Type", "application/json; charset=utf-8");
 

@@ -45,19 +45,16 @@ function initServer(member, alias) {
 
     app.get('/redeem', urlencodedParser, function (req, res) {
         //get the token ID from the callback url
-        Token.parseTokenRequestCallbackUrl(req.protocol + '://' + req.get('host') + req.originalUrl)
-            .then(function(tokenId) {
-                console.log(tokenId.tokenId);
-                member.getToken(tokenId.tokenId)
-                    .then(function (token) {
-                        // Redeem the token to move the funds
-                        member.redeemToken(token, 4.99, 'EUR', 'Book Purchase')
-                            .then(function (transfer) {
-                                console.log('\n Reedeem Token Response:', transfer);
-                                res.status(200);
-                                res.json(transfer)
-                            });
-                    })
+        var tokenId = req.query.tokenId;
+        member.getToken(tokenId)
+            .then(function (token) {
+                //Redeem the token to move the funds
+                member.redeemToken(token, 4.99, 'GBP', 'Book Purchase')
+                    .then(function (transfer) {
+                        console.log('\n Redeem Token Response:', transfer);
+                        res.status(200);
+                        res.json(transfer)
+                    });
             });
     });
 

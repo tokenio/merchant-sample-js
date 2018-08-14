@@ -49,7 +49,7 @@ function initServer(member, alias) {
         member.getToken(tokenId)
             .then(function (token) {
                 //Redeem the token to move the funds
-                member.redeemToken(token, 4.99, 'GBP', 'Book Purchase')
+                member.redeemToken(token)
                     .then(function (transfer) {
                         console.log('\n Redeem Token Response:', transfer);
                         res.status(200);

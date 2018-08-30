@@ -1,4 +1,7 @@
 'use strict';
+// If you plan on using the Token SDK as a module, use import instead, because this sample is barebone we are simply including it as a script, see index.html
+// See https://github.com/tokenio/sdk-js for details
+var {TransferEndpoint} = TokenIO;
 
 var elementId = "tokenPayBtn";
 var tokenController;
@@ -100,7 +103,7 @@ function getTokenRequestUrl(done) {
         amount: 4.99,
         currency: 'GBP',
         description: 'Book Purchase',
-        destination: {account: {faster_payments: {sort_code: "123456", account_number: "12345678"}}}
+        destination: TransferEndpoint.create({account: {faster_payments: {sort_code: "123456", account_number: "12345678"}}})
     });
 
     console.log('data: ', data);

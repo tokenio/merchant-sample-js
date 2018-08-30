@@ -6,9 +6,15 @@ var app = express();
 var bodyParser = require('body-parser');
 var urlencodedParser = bodyParser.json({ extended: false });
 
+ // It is strongly recommended that you use ES6 destructuring to require these objects (or ES6 named imports)
+ // They are written here in ES5 for maximum browser compatibility since we do not transpile this code sample
+ // See https://github.com/tokenio/sdk-js for details
+var TokenIO = require('token-io').TokenIO; // main Token SDK entry object
+var Alias = require('token-io').Alias; // Token alias constructor
+var TransferEndpoint = require('token-io').TransferEndpoint; // Token transfer endpoint constructor
+
  // Connect to Token's development sandbox
-var TokenLib = require("token-io/dist/token-io.node.js");
-var Token = new TokenLib('sandbox', '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI','./keys');
+var Token = new TokenIO({env: 'sandbox', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys'});
 
 var member; // merchant member
 
@@ -29,7 +35,7 @@ function initServer(member, alias) {
         // set up the TokenTransferBuilder
         const tokenBuilder = member.createTransferTokenBuilder(form.amount, form.currency)
             .setDescription(form.description)
-            .addDestination(form.destination)
+            .addDestination(TransferEndpoint.create(form.destination))
             .setToAlias(alias)
             .setToMemberId(member.memberId);
         // set up the TokenRequest
@@ -92,10 +98,10 @@ if (member) {
     });
 } else {
     // Didn't find an existing merchant member. Create a new one.
-    const alias = {
+    const alias = Alias.create({
         type: 'DOMAIN',
         value: "msjs-" + Math.random().toString(36).substring(2, 10) + ".com"
-    };
+    });
     Token.createBusinessMember(alias, Token.UnsecuredFileCryptoEngine).then(function(m) {
         member = m;
         // launch server

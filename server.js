@@ -92,9 +92,11 @@ if (member) {
     });
 } else {
     // Didn't find an existing merchant member. Create a new one.
+    // If a domain alias is used instead of an email, please contact Token
+    // with the domain and member ID for verification.
     const alias = {
-        type: 'DOMAIN',
-        value: "msjs-" + Math.random().toString(36).substring(2, 10) + ".com"
+        type: 'EMAIL',
+        value: "msjs-" + Math.random().toString(36).substring(2, 10) + "+noverify@example.com"
     };
     Token.createBusinessMember(alias, Token.UnsecuredFileCryptoEngine).then(function(m) {
         member = m;

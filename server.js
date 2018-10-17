@@ -94,6 +94,7 @@ if (member) {
     // Didn't find an existing merchant member. Create a new one.
     // If a domain alias is used instead of an email, please contact Token
     // with the domain and member ID for verification.
+    // See https://developer.token.io/sdk/#aliases for more information.
     const alias = {
         type: 'EMAIL',
         value: "msjs-" + Math.random().toString(36).substring(2, 10) + "+noverify@example.com"

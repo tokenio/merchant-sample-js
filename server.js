@@ -13,7 +13,7 @@ var TokenIO = require('token-io').TokenIO; // main Token SDK entry object
 var Alias = require('token-io').Alias; // Token alias constructor
 var TransferEndpoint = require('token-io').TransferEndpoint; // Token transfer endpoint constructor
 
- // Connect to Token's development sandbox
+ // Connect to Token's development sandbox, if you change this, you also need to change window.Token({env}) in client.js
 var Token = new TokenIO({env: 'sandbox', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys'});
 
 var member; // merchant member

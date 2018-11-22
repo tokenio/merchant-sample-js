@@ -37,7 +37,7 @@ function initServer(member, alias) {
             .setDescription(form.description)
             .addDestination(TransferEndpoint.create(form.destination))
             .setToAlias(alias)
-            .setToMemberId(member.memberId);
+            .setToMemberId(member.memberId());
         // set up the TokenRequest
         const tokenRequest = Token.TokenRequest.create(tokenBuilder.build())
               .setRedirectUrl('http://localhost:3000/redeem');
@@ -46,7 +46,7 @@ function initServer(member, alias) {
             const requestId = request.id;
             const redirectUrl = Token.generateTokenRequestUrl(requestId);
             res.redirect(302, redirectUrl);
-        });
+        }).catch(console.log);
     });
 
     app.get('/redeem', urlencodedParser, function (req, res) {
@@ -98,9 +98,12 @@ if (member) {
     });
 } else {
     // Didn't find an existing merchant member. Create a new one.
+    // If a domain alias is used instead of an email, please contact Token
+    // with the domain and member ID for verification.
+    // See https://developer.token.io/sdk/#aliases for more information.
     const alias = Alias.create({
-        type: 'DOMAIN',
-        value: "msjs-" + Math.random().toString(36).substring(2, 10) + ".com"
+        type: 'EMAIL',
+        value: "msjs-" + Math.random().toString(36).substring(2, 10) + "+noverify@example.com"
     });
     Token.createBusinessMember(alias, Token.UnsecuredFileCryptoEngine).then(function(m) {
         member = m;

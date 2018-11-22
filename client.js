@@ -52,14 +52,17 @@ function createPopupButton() {
     // clean up instances
     clean();
 
+    var Token = new window.Token({
+        env: 'sandbox',
+    });
     // create TokenPopupController to handle Popup messages
-    tokenController = window.Token.createPopupController();
+    tokenController = Token.createPopupController();
 
     // get button placeholder element
     var element = document.getElementById(elementId);
 
     // create the button
-    button = window.Token.createTokenButton(element, {
+    button = Token.createTokenButton(element, {
         label: "Popup Token Quick Checkout",
     });
 

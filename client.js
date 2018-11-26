@@ -1,4 +1,9 @@
 'use strict';
+// If you plan on using the Token SDK as a module, use import instead, because this sample is barebone we are simply including it as a script, see index.html
+// See https://github.com/tokenio/sdk-js for details
+var TransferEndpoint = TokenIO.TransferEndpoint;
+
+console.log(TokenIO);
 
 var elementId = "tokenPayBtn";
 var tokenController;
@@ -47,14 +52,17 @@ function createPopupButton() {
     // clean up instances
     clean();
 
+    var Token = new window.Token({
+        env: 'sandbox',
+    });
     // create TokenPopupController to handle Popup messages
-    tokenController = window.Token.createPopupController();
+    tokenController = Token.createPopupController();
 
     // get button placeholder element
     var element = document.getElementById(elementId);
 
     // create the button
-    button = window.Token.createTokenButton(element, {
+    button = Token.createTokenButton(element, {
         label: "Popup Token Quick Checkout",
     });
 
@@ -100,7 +108,7 @@ function getTokenRequestUrl(done) {
         amount: 4.99,
         currency: 'GBP',
         description: 'Book Purchase',
-        destination: {account: {faster_payments: {sort_code: "123456", account_number: "12345678"}}}
+        destination: TransferEndpoint.create({account: {fasterPayments: {sortCode: "123456", accountNumber: "12345678"}}})
     });
 
     console.log('data: ', data);

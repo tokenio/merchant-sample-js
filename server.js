@@ -59,7 +59,7 @@ function initServer(member, alias) {
                     .then(function (transfer) {
                         console.log('\n Redeem Token Response:', transfer);
                         res.status(200);
-                        res.json(transfer)
+                        res.send('Success! Redeemed transfer ' + transfer.id);
                     });
             });
     });

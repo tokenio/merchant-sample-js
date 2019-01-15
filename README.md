@@ -2,8 +2,8 @@
 
 This sample app shows how to integrate the Token Merchant Quick Checkout
 button into a merchant's website.
-You can learn more about the Quick Checkout flow and relevant APIs at the
-[Merchant Quick Checkout documentation](http://developer.token.io/merchant-checkout/).
+You can learn more about the checkout buttons and relevant APIs at
+[Token Request](https://developer.token.io/token-request/?javascript#2-redirect-to-tokenos-to-obtain-authorization).
 
 ### Setup
 
@@ -25,8 +25,8 @@ Clicking the button starts the Token merchant payment flow.
 The server handles endorsed payments by redeeming tokens.
 
 Test by going to `localhost:3000`.
-You can't get far until you create a customer member as described at the
-[Merchant Quick Checkout documentation](https://developer.token.io/merchant-checkout/).
+You can't get far until you create a customer member as described at
+[Token Request](https://developer.token.io/token-request/).
 
 This code uses a publicly-known developer key (the devKey line in the
 initializeSDK method). This normally works, but don't be surprised if

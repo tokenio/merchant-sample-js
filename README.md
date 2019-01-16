@@ -25,8 +25,6 @@ Clicking the button starts the Token merchant payment flow.
 The server handles endorsed payments by redeeming tokens.
 
 Test by going to `localhost:3000`.
-You can't get far until you create a customer member as described at
-[Token Request](https://developer.token.io/token-request/).
 
 This code uses a publicly-known developer key (the devKey line in the
 initializeSDK method). This normally works, but don't be surprised if

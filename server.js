@@ -31,16 +31,16 @@ function initServer(member, alias) {
     // Endpoint for transferring, called by client side after user approval
     app.post('/transfer', urlencodedParser, function (req, res) {
         const form = req.body;
-
-        // set up the TokenTransferBuilder
-        const tokenBuilder = member.createTransferTokenBuilder(form.amount, form.currency)
-            .setDescription(form.description)
-            .addDestination(TransferEndpoint.create(form.destination))
-            .setToAlias(alias)
-            .setToMemberId(member.memberId());
         // set up the TokenRequest
-        const tokenRequest = Token.TokenRequest.create(tokenBuilder.build())
-              .setRedirectUrl('http://localhost:3000/redeem');
+        const tokenRequest = Token.createTransferTokenRequest({
+            currency: form.currency,
+            lifetimeAmount: form.amount,
+            destinations: [TransferEndpoint.create(form.destination)],
+        })
+            .setDescription(form.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .setRedirectUrl('http://localhost:3000/redeem');
         // store the token request
         member.storeTokenRequest(tokenRequest).then(function(request) {
             const requestId = request.id;

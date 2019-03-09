@@ -3,7 +3,7 @@
 var express = require('express');
 var fs = require('fs');
 var app = express();
-const cookieSession = require('cookie-session');
+var cookieSession = require('cookie-session');
 var bodyParser = require('body-parser');
 var urlencodedParser = bodyParser.json({ extended: false });
 
@@ -48,8 +48,8 @@ function initServer(member, alias) {
             .setCSRFToken(nonce);
         // store the token request
         member.storeTokenRequest(tokenRequest).then(function(request) {
-            const requestId = request.id;
-            const redirectUrl = Token.generateTokenRequestUrl(requestId);
+            var requestId = request.id;
+            var redirectUrl = Token.generateTokenRequestUrl(requestId);
             res.status(200).send(redirectUrl);
         }).catch(console.log);
     });
@@ -58,7 +58,7 @@ function initServer(member, alias) {
     app.get('/redeem', urlencodedParser, function (req, res) {
         //get the token ID from the callback url
         var data = req.query.data;
-        Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.nonce).then(result => {
+        Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.nonce).then(function (result) {
             return member.getToken(result.tokenId)
                 .then(function (token) {
                     //Redeem the token to move the funds
@@ -75,8 +75,8 @@ function initServer(member, alias) {
     // for redirect flow, use Token.parseTokenRequestCallbackUrl()
     app.get('/redeemredirect', urlencodedParser, function (req, res) {
         //get the token ID from the callback url
-        const callbackUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
-        Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.nonce).then(result => {
+        var callbackUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+        Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.nonce).then(function (result) {
             return member.getToken(result.tokenId)
                 .then(function (token) {
                     //Redeem the token to move the funds
@@ -107,8 +107,8 @@ try {
     keyPaths = [];
 }
 if (keyPaths && keyPaths.length) {
-    const keyPath = keyPaths[0];
-    const mid = keyPath.replace(/_/g, ":");
+    var keyPath = keyPaths[0];
+    var mid = keyPath.replace(/_/g, ":");
     member = Token.getMember(Token.UnsecuredFileCryptoEngine, mid);
 }
 
@@ -127,7 +127,7 @@ if (member) {
     // If a domain alias is used instead of an email, please contact Token
     // with the domain and member ID for verification.
     // See https://developer.token.io/sdk/#aliases for more information.
-    const alias = {
+    var alias = {
         type: 'EMAIL',
         value: "msjs-" + Math.random().toString(36).substring(2, 10) + "+noverify@example.com"
     };

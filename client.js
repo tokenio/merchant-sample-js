@@ -1,10 +1,4 @@
 'use strict';
-// If you plan on using the Token SDK as a module, use import instead, because this sample is barebone we are simply including it as a script, see index.html
-// See https://github.com/tokenio/sdk-js for details
-var TransferEndpoint = TokenIO.TransferEndpoint;
-
-console.log(TokenIO);
-
 var elementId = "tokenPayBtn";
 var tokenController;
 var button;
@@ -82,9 +76,10 @@ function createPopupButton() {
 
     // setup onSuccess callback
     tokenController.onSuccess(function(data) { // Success Callback
-        // build success URL
+        // ideally you should POST 'data' to your endpoint, but for simplicity's sake
+        // we are simply putting it in the URL
         var successURL = "/redeem"
-            + "?tokenId=" + window.encodeURIComponent(data.tokenId);
+            + "?data=" + window.encodeURIComponent(JSON.stringify(data));
         // navigate to success URL
         window.location.assign(successURL);
     });
@@ -108,7 +103,7 @@ function getTokenRequestUrl(done) {
         amount: 4.99,
         currency: 'GBP',
         description: 'Book Purchase',
-        destination: TransferEndpoint.create({account: {fasterPayments: {sortCode: "123456", accountNumber: "12345678"}}})
+        destination: {account: {fasterPayments: {sortCode: "123456", accountNumber: "12345678"}}},
     });
 
     console.log('data: ', data);
@@ -117,7 +112,7 @@ function getTokenRequestUrl(done) {
     XHR.addEventListener("load", function(event) {
         // execute callback once response is received
         if (event.target.status === 200) {
-            done(event.target.responseURL);
+            done(event.target.response);
         }
     });
 

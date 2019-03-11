@@ -43,7 +43,7 @@ function initServer(member, alias) {
             .setToAlias(alias)
             .setToMemberId(member.memberId())
             .addDestination(form.destination)
-            .setRedirectUrl('http://localhost:3000/redeemredirect')
+            .setRedirectUrl('http://localhost:3000/redeem-redirect')
             .setCallbackState({a: 1}) // arbitrary data
             .setCSRFToken(nonce);
         // store the token request
@@ -73,7 +73,7 @@ function initServer(member, alias) {
     });
 
     // for redirect flow, use Token.parseTokenRequestCallbackUrl()
-    app.get('/redeemredirect', urlencodedParser, function (req, res) {
+    app.get('/redeem-redirect', urlencodedParser, function (req, res) {
         //get the token ID from the callback url
         var callbackUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
         Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.nonce).then(function (result) {

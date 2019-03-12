@@ -13,7 +13,7 @@
   },
   "license": "ISC",
   "dependencies": {
-    "@token-io/tpp": "^1.0.0-beta.0",
+    "@token-io/tpp": "^1.0.0-beta.1",
     "body-parser": "^1.17.2",
     "cookie-session": "^1.3.3",
     "express": "^4.15.4"

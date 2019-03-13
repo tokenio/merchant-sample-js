@@ -1,67 +1,93 @@
 'use strict';
 
 var express = require('express');
-const fs = require('fs');
+var fs = require('fs');
 var app = express();
+var cookieSession = require('cookie-session');
 var bodyParser = require('body-parser');
 var urlencodedParser = bodyParser.json({ extended: false });
 
  // It is strongly recommended that you use ES6 destructuring to require these objects (or ES6 named imports)
  // They are written here in ES5 for maximum browser compatibility since we do not transpile this code sample
  // See https://github.com/tokenio/sdk-js for details
-var TokenIO = require('token-io').TokenIO; // main Token SDK entry object
-var Alias = require('token-io').Alias; // Token alias constructor
-var TransferEndpoint = require('token-io').TransferEndpoint; // Token transfer endpoint constructor
+var TokenClient = require('@token-io/tpp').TokenClient; // main Token SDK entry object
 
  // Connect to Token's development sandbox, if you change this, you also need to change window.Token({env}) in client.js
-var Token = new TokenIO({env: 'sandbox', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys'});
+var Token = new TokenClient({env: 'sandbox', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys'});
 
 var member; // merchant member
 
 function initServer(member, alias) {
-    const address = alias.value;
-    // Returns HTML file with {alias} replaced by email address
+    app.use(cookieSession({
+        name: 'session',
+        keys: ['cookieSessionKey'],
+        // Cookie Options
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    }));
+
     app.get('/', function (req, res) {
         fs.readFile('index.html', 'utf8', function (err, contents) {
             res.set('Content-Type', 'text/html');
-            res.send(contents.replace(/{alias}/g, address));
+            res.send(contents);
         })
     });
 
     // Endpoint for transferring, called by client side after user approval
     app.post('/transfer', urlencodedParser, function (req, res) {
-        const form = req.body;
-
-        // set up the TokenTransferBuilder
-        const tokenBuilder = member.createTransferTokenBuilder(form.amount, form.currency)
-            .setDescription(form.description)
-            .addDestination(TransferEndpoint.create(form.destination))
-            .setToAlias(alias)
-            .setToMemberId(member.memberId());
+        var form = req.body;
+        var nonce = Token.Util.generateNonce();
+        req.session.nonce = nonce;
         // set up the TokenRequest
-        const tokenRequest = Token.TokenRequest.create(tokenBuilder.build())
-              .setRedirectUrl('http://localhost:3000/redeem');
+        var tokenRequest = Token.createTransferTokenRequest(form.amount, form.currency)
+            .setDescription(form.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .addDestination(form.destination)
+            .setRedirectUrl('http://localhost:3000/redeem-redirect')
+            .setCallbackState({a: 1}) // arbitrary data
+            .setCSRFToken(nonce);
         // store the token request
         member.storeTokenRequest(tokenRequest).then(function(request) {
-            const requestId = request.id;
-            const redirectUrl = Token.generateTokenRequestUrl(requestId);
-            res.redirect(302, redirectUrl);
+            var requestId = request.id;
+            var redirectUrl = Token.generateTokenRequestUrl(requestId);
+            res.status(200).send(redirectUrl);
         }).catch(console.log);
     });
 
+    // for popup flow, use Token.parseTokenRequestCallbackParams()
     app.get('/redeem', urlencodedParser, function (req, res) {
         //get the token ID from the callback url
-        var tokenId = req.query.tokenId;
-        member.getToken(tokenId)
-            .then(function (token) {
-                //Redeem the token to move the funds
-                member.redeemToken(token)
-                    .then(function (transfer) {
-                        console.log('\n Redeem Token Response:', transfer);
-                        res.status(200);
-                        res.send('Success! Redeemed transfer ' + transfer.id);
-                    });
-            });
+        var data = req.query.data;
+        Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.nonce).then(function (result) {
+            return member.getToken(result.tokenId)
+                .then(function (token) {
+                    //Redeem the token to move the funds
+                    member.redeemToken(token)
+                        .then(function (transfer) {
+                            console.log('\n Redeem Token Response:', transfer);
+                            res.status(200);
+                            res.send('Success! Redeemed transfer ' + transfer.id);
+                        });
+                });
+        })
+    });
+
+    // for redirect flow, use Token.parseTokenRequestCallbackUrl()
+    app.get('/redeem-redirect', urlencodedParser, function (req, res) {
+        //get the token ID from the callback url
+        var callbackUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+        Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.nonce).then(function (result) {
+            return member.getToken(result.tokenId)
+                .then(function (token) {
+                    //Redeem the token to move the funds
+                    member.redeemToken(token)
+                        .then(function (transfer) {
+                            console.log('\n Redeem Token Response:', transfer);
+                            res.status(200);
+                            res.send('Success! Redeemed transfer ' + transfer.id);
+                        });
+                });
+        })
     });
 
     app.use(express.static(__dirname));
@@ -81,8 +107,8 @@ try {
     keyPaths = [];
 }
 if (keyPaths && keyPaths.length) {
-    const keyPath = keyPaths[0];
-    const mid = keyPath.replace(/_/g, ":");
+    var keyPath = keyPaths[0];
+    var mid = keyPath.replace(/_/g, ":");
     member = Token.getMember(Token.UnsecuredFileCryptoEngine, mid);
 }
 
@@ -101,13 +127,16 @@ if (member) {
     // If a domain alias is used instead of an email, please contact Token
     // with the domain and member ID for verification.
     // See https://developer.token.io/sdk/#aliases for more information.
-    const alias = Alias.create({
+    var alias = {
         type: 'EMAIL',
         value: "msjs-" + Math.random().toString(36).substring(2, 10) + "+noverify@example.com"
-    });
-    Token.createBusinessMember(alias, Token.UnsecuredFileCryptoEngine).then(function(m) {
+    };
+    Token.createMember(alias, Token.UnsecuredFileCryptoEngine).then(function(m) {
         member = m;
-        // launch server
-        initServer(member, alias);
+        // A member's profile has a display name and picture.
+        // The Token UI shows this (and the alias) to the user when requesting access.
+        member.setProfile({
+            displayNameFirst: 'Demo Merchant'
+        }).then(function() {initServer(member, alias)});
     });
 }

@@ -38,6 +38,6 @@ Token to get one.
 
 If anything goes wrong, try to update the token SDK dependency:
 
-`npm update token-io`
+`npm update @token-io/tpp`
 
 Otherwise, email Token support: support@token.io, or one of the Token engineers.

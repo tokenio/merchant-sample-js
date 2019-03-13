@@ -133,7 +133,10 @@ if (member) {
     };
     Token.createMember(alias, Token.UnsecuredFileCryptoEngine).then(function(m) {
         member = m;
-        // launch server
-        initServer(member, alias);
+        // A member's profile has a display name and picture.
+        // The Token UI shows this (and the alias) to the user when requesting access.
+        member.setProfile({
+            displayNameFirst: 'Demo Merchant'
+        }).then(function() {initServer(member, alias)});
     });
 }

@@ -7,8 +7,6 @@ var cookieSession = require('cookie-session');
 var bodyParser = require('body-parser');
 var urlencodedParser = bodyParser.json({ extended: false });
 
- // It is strongly recommended that you use ES6 destructuring to require these objects (or ES6 named imports)
- // They are written here in ES5 for maximum browser compatibility since we do not transpile this code sample
  // See https://github.com/tokenio/sdk-js for details
 var TokenClient = require('@token-io/tpp').TokenClient; // main Token SDK entry object
 

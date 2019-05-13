@@ -1,3 +1,14 @@
 #tokenPayBtn {
     width: 230px;
 }
+
+.buttonTypeSelector {
+    display: block;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.buttonTypeSelector label {
+    cursor: pointer;
+    margin-left: 10px;
+}

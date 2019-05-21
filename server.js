@@ -35,20 +35,23 @@ function initServer(member, alias) {
         var form = req.body;
         var nonce = Token.Util.generateNonce();
         req.session.nonce = nonce;
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-redirect';
+
         // set up the TokenRequest
         var tokenRequest = Token.createTransferTokenRequest(form.amount, form.currency)
             .setDescription(form.description)
             .setToAlias(alias)
             .setToMemberId(member.memberId())
             .addDestination(form.destination)
-            .setRedirectUrl('http://localhost:3000/redeem-redirect')
+            .setRedirectUrl(redirectUrl)
             .setCallbackState({a: 1}) // arbitrary data
             .setCSRFToken(nonce);
+
         // store the token request
         member.storeTokenRequest(tokenRequest).then(function(request) {
             var requestId = request.id;
-            var redirectUrl = Token.generateTokenRequestUrl(requestId);
-            res.status(200).send(redirectUrl);
+            var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+            res.status(200).send(tokenRequestUrl);
         }).catch(console.log);
     });
 

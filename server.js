@@ -135,8 +135,10 @@ if (member) {
         // The Token UI shows this (and the alias) to the user when requesting access.
         member.setProfile({
             displayNameFirst: 'Demo Merchant'
-        });
-        member.setProfilePicture('image/png', fs.readFileSync('southside.png'))
+        })
+            .then(function () {
+                member.setProfilePicture('image/png', fs.readFileSync('southside.png'))
+            })
             .then(function () {
                 initServer(member, alias)
             });

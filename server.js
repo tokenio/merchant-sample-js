@@ -13,9 +13,59 @@ var TokenClient = require('@token-io/tpp').TokenClient; // main Token SDK entry 
  // Connect to Token's development sandbox, if you change this, you also need to change window.Token({env}) in client.js
 var Token = new TokenClient({env: 'sandbox', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys'});
 
-var member; // merchant member
+async function init() {
+    var alias; // merchant alias
+    var member; // merchant member
+    // If we know of a previously-created merchant member, load it; else create a new one.
 
-function initServer(member, alias) {
+    // Token SDK stores member keys in files in ./keys.
+    // If merchant member's ID is "m:1234:567", its key file is "m_1234_567".
+    var keyPaths;
+    try {
+        keyPaths = fs.readdirSync('./keys');
+    } catch (x) {
+        keyPaths = [];
+    }
+    if (keyPaths && keyPaths.length) {
+        var keyPath = keyPaths[0];
+        var mid = keyPath.replace(/_/g, ":");
+        member = Token.getMember(Token.UnsecuredFileCryptoEngine, mid);
+    }
+
+    // If member is defined, that means we found keys and loaded them.
+    if (member) {
+        // We're using an existing merchant member. Fetch its alias (email address)
+        try {
+            alias = await member.firstAlias();
+        } catch (e) {
+            console.log("Something went wrong: " + err);
+            console.log("If member ID not found or firstAlias fails, `rm -r ./keys` and try again.");
+            throw e;
+        }
+    } else {
+        // Didn't find an existing merchant member. Create a new one.
+        // If a domain alias is used instead of an email, please contact Token
+        // with the domain and member ID for verification.
+        // See https://developer.token.io/sdk/#aliases for more information.
+        alias = {
+            type: 'EMAIL',
+            value: "msjs-" + Math.random().toString(36).substring(2, 10) + "+noverify@example.com"
+        };
+        member = await Token.createMember(alias, Token.UnsecuredFileCryptoEngine);
+        // A member's profile has a display name and picture.
+        // The Token UI shows this (and the alias) to the user when requesting access.
+        await member.setProfile({
+            displayNameFirst: 'Demo Merchant'
+        });
+
+        await member.setProfilePicture('image/png', fs.readFileSync('southside.png'))
+    }
+
+    // launch server
+    return initServer(member, alias);
+}
+
+async function initServer(member, alias) {
     app.use(cookieSession({
         name: 'session',
         keys: ['cookieSessionKey'],
@@ -31,61 +81,93 @@ function initServer(member, alias) {
     });
 
     // Endpoint for transferring, called by client side after user approval
-    app.post('/transfer', urlencodedParser, function (req, res) {
+    app.get('/transfer', async function (req, res) {
+        var destination = {
+            account: {
+                fasterPayments: {
+                    sortCode: '123456',
+                    accountNumber: '12345678',
+                },
+            },
+        };
+        var queryData = req.query;
+        var nonce = Token.Util.generateNonce();
+        req.session.nonce = nonce;
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem';
+
+        // set up the TokenRequest
+        var tokenRequest = Token.createTransferTokenRequest(queryData.amount, queryData.currency)
+            .setDescription(queryData.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .addDestination(destination)
+            .setRedirectUrl(redirectUrl)
+            .setCallbackState({a: 1}) // arbitrary data
+            .setCSRFToken(nonce);
+
+        // store the token request
+        var request = await member.storeTokenRequest(tokenRequest)
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        res.redirect(302, tokenRequestUrl);
+    });
+
+    // Endpoint for transferring, called by client side after user approval
+    app.post('/transfer-popup', urlencodedParser, async function (req, res) {
+        var destination = {
+            account: {
+                fasterPayments: {
+                    sortCode: '123456',
+                    accountNumber: '12345678',
+                },
+            },
+        };
         var form = req.body;
         var nonce = Token.Util.generateNonce();
         req.session.nonce = nonce;
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-popup';
+
         // set up the TokenRequest
         var tokenRequest = Token.createTransferTokenRequest(form.amount, form.currency)
             .setDescription(form.description)
             .setToAlias(alias)
             .setToMemberId(member.memberId())
-            .addDestination(form.destination)
-            .setRedirectUrl('http://localhost:3000/redeem-redirect')
+            .addDestination(destination)
+            .setRedirectUrl(redirectUrl)
             .setCallbackState({a: 1}) // arbitrary data
             .setCSRFToken(nonce);
+
         // store the token request
-        member.storeTokenRequest(tokenRequest).then(function(request) {
-            var requestId = request.id;
-            var redirectUrl = Token.generateTokenRequestUrl(requestId);
-            res.status(200).send(redirectUrl);
-        }).catch(console.log);
+        var request = await member.storeTokenRequest(tokenRequest);
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        res.status(200).send(tokenRequestUrl);
+    });
+    
+    // for redirect flow, use Token.parseTokenRequestCallbackUrl()
+    app.get('/redeem', urlencodedParser, async function (req, res) {
+        //get the token ID from the callback url
+        var callbackUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+        var result = await Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.nonce);
+        var token = await member.getToken(result.tokenId);
+        //Redeem the token to move the funds
+        var transfer = await member.redeemToken(token);
+        console.log('\n Redeem Token Response:', transfer);
+        res.status(200);
+        res.send('Success! Redeemed transfer ' + transfer.id);
     });
 
     // for popup flow, use Token.parseTokenRequestCallbackParams()
-    app.get('/redeem', urlencodedParser, function (req, res) {
+    app.get('/redeem-popup', urlencodedParser, async function (req, res) {
         //get the token ID from the callback url
         var data = req.query.data;
-        Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.nonce).then(function (result) {
-            return member.getToken(result.tokenId)
-                .then(function (token) {
-                    //Redeem the token to move the funds
-                    member.redeemToken(token)
-                        .then(function (transfer) {
-                            console.log('\n Redeem Token Response:', transfer);
-                            res.status(200);
-                            res.send('Success! Redeemed transfer ' + transfer.id);
-                        });
-                });
-        })
-    });
-
-    // for redirect flow, use Token.parseTokenRequestCallbackUrl()
-    app.get('/redeem-redirect', urlencodedParser, function (req, res) {
-        //get the token ID from the callback url
-        var callbackUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
-        Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.nonce).then(function (result) {
-            return member.getToken(result.tokenId)
-                .then(function (token) {
-                    //Redeem the token to move the funds
-                    member.redeemToken(token)
-                        .then(function (transfer) {
-                            console.log('\n Redeem Token Response:', transfer);
-                            res.status(200);
-                            res.send('Success! Redeemed transfer ' + transfer.id);
-                        });
-                });
-        })
+        var result = await Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.nonce);
+        var token = await member.getToken(result.tokenId);
+        //Redeem the token to move the funds
+        var transfer = await member.redeemToken(token);
+        console.log('\n Redeem Token Response:', transfer);
+        res.status(200);
+        res.send('Success! Redeemed transfer ' + transfer.id);
     });
 
     app.use(express.static(__dirname));
@@ -94,53 +176,4 @@ function initServer(member, alias) {
     })
 }
 
-// If we know of a previously-created merchant member, load it; else create a new one.
-
-// Token SDK stores member keys in files in ./keys.
-// If merchant member's ID is "m:1234:567", its key file is "m_1234_567".
-var keyPaths;
-try {
-    keyPaths = fs.readdirSync('./keys');
-} catch (x) {
-    keyPaths = [];
-}
-if (keyPaths && keyPaths.length) {
-    var keyPath = keyPaths[0];
-    var mid = keyPath.replace(/_/g, ":");
-    member = Token.getMember(Token.UnsecuredFileCryptoEngine, mid);
-}
-
-// If member is defined, that means we found keys and loaded them.
-if (member) {
-    // We're using an existing merchant member. Fetch its alias (email address)
-    member.firstAlias().then(function (alias) {
-        // launch server
-        initServer(member, alias);
-    }, function (err) {
-        console.log("Something went wrong: " + err);
-        console.log("If member ID not found or firstAlias fails, `rm -r ./keys` and try again.");
-    });
-} else {
-    // Didn't find an existing merchant member. Create a new one.
-    // If a domain alias is used instead of an email, please contact Token
-    // with the domain and member ID for verification.
-    // See https://developer.token.io/sdk/#aliases for more information.
-    var alias = {
-        type: 'EMAIL',
-        value: "msjs-" + Math.random().toString(36).substring(2, 10) + "+noverify@example.com"
-    };
-    Token.createMember(alias, Token.UnsecuredFileCryptoEngine).then(function (m) {
-        member = m;
-        // A member's profile has a display name and picture.
-        // The Token UI shows this (and the alias) to the user when requesting access.
-        member.setProfile({
-            displayNameFirst: 'Demo Merchant'
-        })
-            .then(function () {
-                return member.setProfilePicture('image/png', fs.readFileSync('southside.png'))
-            })
-            .then(function () {
-                initServer(member, alias)
-            });
-    });
-}
+init();

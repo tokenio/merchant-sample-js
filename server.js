@@ -129,12 +129,18 @@ if (member) {
         type: 'EMAIL',
         value: "msjs-" + Math.random().toString(36).substring(2, 10) + "+noverify@example.com"
     };
-    Token.createMember(alias, Token.UnsecuredFileCryptoEngine).then(function(m) {
+    Token.createMember(alias, Token.UnsecuredFileCryptoEngine).then(function (m) {
         member = m;
         // A member's profile has a display name and picture.
         // The Token UI shows this (and the alias) to the user when requesting access.
         member.setProfile({
             displayNameFirst: 'Demo Merchant'
-        }).then(function() {initServer(member, alias)});
+        })
+            .then(function () {
+                return member.setProfilePicture('image/png', fs.readFileSync('southside.png'))
+            })
+            .then(function () {
+                initServer(member, alias)
+            });
     });
 }

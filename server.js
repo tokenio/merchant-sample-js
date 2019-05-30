@@ -137,7 +137,7 @@ if (member) {
             displayNameFirst: 'Demo Merchant'
         })
             .then(function () {
-                member.setProfilePicture('image/png', fs.readFileSync('southside.png'))
+                return member.setProfilePicture('image/png', fs.readFileSync('southside.png'))
             })
             .then(function () {
                 initServer(member, alias)

@@ -57,7 +57,8 @@ async function init() {
         await member.setProfile({
             displayNameFirst: 'Demo Merchant'
         });
-        await member.setProfilePicture('img/gif', 'R0lGODlhAQABAIABAP///wAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==');
+
+        await member.setProfilePicture('image/png', fs.readFileSync('southside.png'))
     }
 
     // launch server

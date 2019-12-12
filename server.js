@@ -26,6 +26,7 @@ async function init() {
     } catch (x) {
         keyPaths = [];
     }
+
     if (keyPaths && keyPaths.length) {
         var keyPath = keyPaths[0];
         var mid = keyPath.replace(/_/g, ":");
@@ -57,7 +58,6 @@ async function init() {
         await member.setProfile({
             displayNameFirst: 'Demo Merchant'
         });
-
         await member.setProfilePicture('image/png', fs.readFileSync('southside.png'))
     }
 
@@ -84,15 +84,19 @@ async function initServer(member, alias) {
     app.get('/transfer', async function (req, res) {
         var destination = {
             account: {
-                fasterPayments: {
-                    sortCode: '123456',
-                    accountNumber: '12345678',
-                },
+                sepa: {
+                    iban: 'bic',
+                    bic: 'DE16700222000072880129'
+                }
             },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
         };
         var queryData = req.query;
-        var nonce = Token.Util.generateNonce();
-        req.session.nonce = nonce;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
         var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem';
 
         // set up the TokenRequest
@@ -102,8 +106,8 @@ async function initServer(member, alias) {
             .setToMemberId(member.memberId())
             .addDestination(destination)
             .setRedirectUrl(redirectUrl)
-            .setCallbackState({a: 1}) // arbitrary data
-            .setCSRFToken(nonce);
+            .setCSRFToken(csrfToken)
+            .setRefId(refId);
 
         // store the token request
         var request = await member.storeTokenRequest(tokenRequest)
@@ -116,15 +120,19 @@ async function initServer(member, alias) {
     app.post('/transfer-popup', urlencodedParser, async function (req, res) {
         var destination = {
             account: {
-                fasterPayments: {
-                    sortCode: '123456',
-                    accountNumber: '12345678',
-                },
+                sepa: {
+                    iban: 'bic',
+                    bic: 'DE16700222000072880129'
+                }
             },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
         };
         var form = req.body;
-        var nonce = Token.Util.generateNonce();
-        req.session.nonce = nonce;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
         var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-popup';
 
         // set up the TokenRequest
@@ -134,8 +142,8 @@ async function initServer(member, alias) {
             .setToMemberId(member.memberId())
             .addDestination(destination)
             .setRedirectUrl(redirectUrl)
-            .setCallbackState({a: 1}) // arbitrary data
-            .setCSRFToken(nonce);
+            .setCSRFToken(csrfToken)
+            .setRefId(refId);
 
         // store the token request
         var request = await member.storeTokenRequest(tokenRequest);
@@ -143,12 +151,84 @@ async function initServer(member, alias) {
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
         res.status(200).send(tokenRequestUrl);
     });
-    
+
+    app.get('/standing-order', async function (req, res) {
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-standing-order';
+        var destination = {
+            sepa: {
+                iban: 'bic',
+                bic: 'DE16700222000072880129'
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+
+        var requestData = req.query;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
+
+        var startDate = new Date().toISOString().split("T")[0];
+        var endDate = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split("T")[0];
+
+        var tokenRequest = Token.createStandingOrderTokenRequest(requestData.amount, requestData.currency, 'MNTH', startDate, endDate)
+            .addTransferDestination(destination)
+            .setDescription(requestData.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .setRedirectUrl(redirectUrl)
+            .setCSRFToken(csrfToken)
+            .setRefId(refId);
+
+        var request = await member.storeTokenRequest(tokenRequest)
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+
+        res.redirect(302, tokenRequestUrl);
+    });
+
+    app.post('/standing-order-popup', urlencodedParser, async function (req, res) {
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-standing-order-popup';
+        var destination = {
+            sepa: {
+                iban: 'bic',
+                bic: 'DE16700222000072880129'
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+
+        var requestData = req.body;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
+
+        var startDate = new Date().toISOString().split("T")[0];
+        var endDate = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split("T")[0];
+
+        var tokenRequest = Token.createStandingOrderTokenRequest(requestData.amount, requestData.currency, 'MNTH', startDate, endDate)
+            .addTransferDestination(destination)
+            .setDescription(requestData.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .setRedirectUrl(redirectUrl)
+            .setCSRFToken(csrfToken)
+            .setRefId(refId);
+
+        var request = await member.storeTokenRequest(tokenRequest)
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+
+        res.status(200).send(tokenRequestUrl);
+    });
+
     // for redirect flow, use Token.parseTokenRequestCallbackUrl()
     app.get('/redeem', urlencodedParser, async function (req, res) {
         //get the token ID from the callback url
         var callbackUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
-        var result = await Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.nonce);
+        var result = await Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.csrfToken);
         var token = await member.getToken(result.tokenId);
         //Redeem the token to move the funds
         var transfer = await member.redeemToken(token);
@@ -161,13 +241,38 @@ async function initServer(member, alias) {
     app.get('/redeem-popup', urlencodedParser, async function (req, res) {
         //get the token ID from the callback url
         var data = req.query.data;
-        var result = await Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.nonce);
+        var result = await Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.csrfToken);
         var token = await member.getToken(result.tokenId);
         //Redeem the token to move the funds
         var transfer = await member.redeemToken(token);
         console.log('\n Redeem Token Response:', transfer);
         res.status(200);
         res.send('Success! Redeemed transfer ' + transfer.id);
+    });
+
+    app.get('/redeem-standing-order', urlencodedParser, async function (req, res) {
+        //get the token ID from the callback url
+        var callbackUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+        var result = await Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.csrfToken);
+
+        var standingOrderSubmission = await member.redeemStandingOrderToken(result.tokenId);
+
+        console.log('\n Redeem Token Response:', JSON.stringify(standingOrderSubmission));
+        res.status(200);
+        res.send('Success! Redeemed transfer ' + standingOrderSubmission.tokenId);
+    });
+
+    app.get('/redeem-standing-order-popup', urlencodedParser, async function (req, res) {
+        //get the token ID from the callback url
+        debugger;
+        var data = req.query.data;
+        var result = await Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.csrfToken);
+
+        var standingOrderSubmission = await member.redeemStandingOrderToken(result.tokenId);
+
+        console.log('\n Redeem Token Response:', JSON.stringify(standingOrderSubmission));
+        res.status(200);
+        res.send('Success! Redeemed transfer ' + standingOrderSubmission.tokenId);
     });
 
     app.use(express.static(__dirname));

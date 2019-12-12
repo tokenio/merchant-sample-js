@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html>
+
     <head>
         <title>Merchant Sample - JavaScript</title>
         <link rel="stylesheet" type="text/css" href="/style.css"  />
     </head>
+
     <body>
         <div class="buttonTypeSelector">
             Desktop mode:
@@ -12,6 +14,15 @@
             <label for="buttonTypePopup">Popup</label>
             <input type="radio" id="buttonTypePopup" name="buttonTypeSelector" value="POPUP" />
             <small>* Mobile is always redirect</small>
+        </div>
+        <div class="transferTypeSelector">
+            Select transfer type:
+            <label for="transferTypeSingleImmediate">Single Immediate Transfer (default)</label>
+            <input type="radio" id="transferTypeSingleImmediate" name="transferTypeSelector" value="SINGLE_IMMEDIATE"
+                checked />
+            <label for="transferTypeStandingOrder">Standing Order</label>
+            <input type="radio" id="transferTypeStandingOrder" name="transferTypeSelector" value="STANDING_ORDER" />
+
         </div>
         <div id="tokenPayBtn"></div>
         <script src="https://web-app.sandbox.token.io/token.js"></script>

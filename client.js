@@ -78,7 +78,7 @@ function createPopupButton() {
     } else if (selectedTransferType === 'FUTURE_DATED') {
         path = '/redeem-future-dated-popup';
     } else {
-        path = '/transfer-popup';
+        path = '/redeem-popup';
     }
     tokenController = token.createController({
         onSuccess: function (data) { // Success Callback

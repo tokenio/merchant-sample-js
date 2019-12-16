@@ -75,17 +75,19 @@ function createPopupButton() {
     var path = "";
     if (selectedTransferType === 'STANDING_ORDER') {
         path = '/redeem-standing-order-popup';
+    } else if (selectedTransferType === 'FUTURE_DATED') {
+        path = '/redeem-future-dated-popup';
     } else {
-        path = '/redeem-popup';
+        path = '/transfer-popup';
     }
     tokenController = token.createController({
-        onSuccess: function(data) { // Success Callback
+        onSuccess: function (data) { // Success Callback
             // build success URL
             var successURL = `${path}?data=${window.encodeURIComponent(JSON.stringify(data))}`;
             // navigate to success URL
             window.location.assign(successURL);
         },
-        onError: function(error) { // Failure Callback
+        onError: function (error) { // Failure Callback
             throw error;
         },
     });
@@ -94,7 +96,7 @@ function createPopupButton() {
     tokenController.bindButtonClick(
         button, // Token Button
         getTokenRequestUrl, // token request function
-        function(error) { // bindComplete callback
+        function (error) { // bindComplete callback
             if (error) throw error;
             // enable button after binding
             button.enable();
@@ -113,6 +115,8 @@ function redirectTokenRequest(transferType) {
     var path = "";
     if (selectedTransferType === 'STANDING_ORDER') {
         path = '/standing-order?';
+    } else if (selectedTransferType === 'FUTURE_DATED') {
+        path = '/future-dated?';
     } else {
         path = '/transfer?';
     }
@@ -125,7 +129,9 @@ function getTokenRequestUrl(done) {
     var path = "";
     if (selectedTransferType === 'STANDING_ORDER') {
         path = '/standing-order-popup';
-    }else {
+    } else if (selectedTransferType === 'FUTURE_DATED') {
+        path = '/future-dated-popup';
+    } else {
         path = '/transfer-popup';
     }
     fetch(path, {
@@ -135,16 +141,16 @@ function getTokenRequestUrl(done) {
         },
         body: JSON.stringify(data),
     })
-    .then(function(response) {
-        if (response.ok) {
-            response.text()
-                .then(function (data) {
-                    // execute callback when successful response is received
-                    done(data);
-                    console.log('data: ', data);
-                });
-        }
-    });
+        .then(function (response) {
+            if (response.ok) {
+                response.text()
+                    .then(function (data) {
+                        // execute callback when successful response is received
+                        done(data);
+                        console.log('data: ', data);
+                    });
+            }
+        });
 }
 
 function setupButtonTypeSelector() {

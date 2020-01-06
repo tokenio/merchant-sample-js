@@ -11,7 +11,7 @@ var urlencodedParser = bodyParser.json({ extended: false });
 var TokenClient = require('@token-io/tpp').TokenClient; // main Token SDK entry object
 
 // Connect to Token's development sandbox, if you change this, you also need to change window.Token({env}) in client.js
-var Token = new TokenClient({ env: 'dev', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys' });
+var Token = new TokenClient({ env: 'sandbox', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys' });
 var tokenRequestId = "";
 
 
@@ -41,7 +41,7 @@ async function init() {
         try {
             alias = await member.firstAlias();
         } catch (e) {
-            console.log("Something went wrong: " + err);
+            console.log("Something went wrong: " + e);
             console.log("If member ID not found or firstAlias fails, `rm -r ./keys` and try again.");
             throw e;
         }

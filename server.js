@@ -11,7 +11,9 @@ var urlencodedParser = bodyParser.json({ extended: false });
 var TokenClient = require('@token-io/tpp').TokenClient; // main Token SDK entry object
 
 // Connect to Token's development sandbox, if you change this, you also need to change window.Token({env}) in client.js
-var Token = new TokenClient({ env: 'sandbox', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys' });
+var Token = new TokenClient({ env: 'dev', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys' });
+var tokenRequestId = "";
+
 
 async function init() {
     var alias; // merchant alias
@@ -83,16 +85,15 @@ async function initServer(member, alias) {
     // Endpoint for transferring, called by client side after user approval
     app.get('/transfer', async function (req, res) {
         var destination = {
-            account: {
-                sepa: {
-                    iban: 'bic',
-                    bic: 'DE16700222000072880129'
-                }
+            sepa: {
+                iban: 'bic',
+                bic: 'DE16700222000072880129'
             },
             customerData: {
                 legalNames: ['merchant-sample-js']
             }
         };
+
         var queryData = req.query;
         var refId = Token.Util.generateNonce();
         var csrfToken = Token.Util.generateNonce();
@@ -104,7 +105,7 @@ async function initServer(member, alias) {
             .setDescription(queryData.description)
             .setToAlias(alias)
             .setToMemberId(member.memberId())
-            .addDestination(destination)
+            .addTransferDestination(destination)
             .setRedirectUrl(redirectUrl)
             .setCSRFToken(csrfToken)
             .setRefId(refId);
@@ -119,11 +120,9 @@ async function initServer(member, alias) {
     // Endpoint for transferring, called by client side after user approval
     app.post('/transfer-popup', urlencodedParser, async function (req, res) {
         var destination = {
-            account: {
-                sepa: {
-                    iban: 'bic',
-                    bic: 'DE16700222000072880129'
-                }
+            sepa: {
+                iban: 'bic',
+                bic: 'DE16700222000072880129'
             },
             customerData: {
                 legalNames: ['merchant-sample-js']
@@ -141,7 +140,7 @@ async function initServer(member, alias) {
             .setDescription(form.description)
             .setToAlias(alias)
             .setToMemberId(member.memberId())
-            .addDestination(destination)
+            .addTransferDestination(destination)
             .setRedirectUrl(redirectUrl)
             .setCSRFToken(csrfToken)
             .setRefId(refId);
@@ -299,6 +298,194 @@ async function initServer(member, alias) {
         var requestId = request.id;
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
 
+        res.status(200).send(tokenRequestUrl);
+    });
+
+    // Endpoint for transferring, called by client side after user approval
+    app.get('/one-step-payment', async function (req, res) {
+        var transferDestination = {
+                sepa: {
+                    iban: 'DE16700222000072880129',
+                    bic: '123456'
+                },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+
+        var destination = {
+            account: {
+                sepa: {
+                    iban: 'DE16700222000072880129',
+                    bic: '123456'
+                }
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+        var bankId = "stet-cmci";
+        var source = {
+            account: {
+                sepa: {
+                    iban: "FR7610268111111111110031196"
+                }
+            },
+            bankId: bankId
+        };
+        var queryData = req.query;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem';
+
+        // set up the TokenRequest
+        var tokenRequest = Token.createTransferTokenRequest(queryData.amount, queryData.currency)
+            .setDescription(queryData.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .addDestination(destination)
+            .setRedirectUrl(redirectUrl)
+            .setCSRFToken(csrfToken)
+            .setRefId(refId)
+            .setSource(source)
+            .setBankId(bankId)
+            .addTransferDestination(transferDestination);
+        console.log("Token Request: "+JSON.stringify(tokenRequest));
+        // store the token request
+        var request = await member.storeTokenRequest(tokenRequest)
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        res.redirect(302, tokenRequestUrl);
+    });
+
+    // Endpoint for transferring, called by client side after user approval
+    app.post('/one-step-payment-popup', urlencodedParser, async function (req, res) {
+        var transferDestination = {
+            sepa: {
+                iban: 'DE16700222000072880129',
+                bic: '123456'
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+
+        var destination = {
+            account: {
+                sepa: {
+                    iban: 'DE16700222000072880129',
+                    bic: '123456'
+                }
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+        
+        var bankId = "ngp-cbi-05034";
+        var source = {
+            account: {
+                sepa: {
+                    iban: "IT77O0848283352871412938123"
+                }
+            },
+            bankId: bankId
+        };
+
+        var form = req.body;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-popup';
+
+        // set up the TokenRequest
+        var tokenRequest = Token.createTransferTokenRequest(form.amount, form.currency)
+            .setDescription(form.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .addDestination(destination)
+            .setRedirectUrl(redirectUrl)
+            .setCSRFToken(csrfToken)
+            .setRefId(refId)
+            .setSource(source)
+            .setBankId(bankId)
+            .addTransferDestination(transferDestination);
+        console.log(JSON.stringify(tokenRequest))
+        // store the token request
+        var request = await member.storeTokenRequest(tokenRequest);
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        res.status(200).send(tokenRequestUrl);
+    });
+
+     // Endpoint for transferring, called by client side after user approval
+     app.get('/cross-border', async function (req, res) {
+        var destination = {
+            sepa: {
+                iban: 'bic',
+                bic: 'DE16700222000072880129'
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+
+        var queryData = req.query;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem';
+
+        // set up the TokenRequest
+        var tokenRequest = Token.createTransferTokenRequest(queryData.amount, queryData.currency)
+            .setDescription(queryData.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .addTransferDestination(destination)
+            .setRedirectUrl(redirectUrl)
+            .setCSRFToken(csrfToken)
+            .setRefId(refId);
+
+        // store the token request
+        var request = await member.storeTokenRequest(tokenRequest)
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        res.redirect(302, tokenRequestUrl);
+    });
+
+    // Endpoint for transferring, called by client side after user approval
+    app.post('/cross-border-popup', urlencodedParser, async function (req, res) {
+        var destination = {
+            sepa: {
+                iban: 'bic',
+                bic: 'DE16700222000072880129'
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+
+        var form = req.body;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-popup';
+
+        // set up the TokenRequest
+        var tokenRequest = Token.createTransferTokenRequest(form.amount, form.currency)
+            .setDescription(form.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .addTransferDestination(destination)
+            .setRedirectUrl(redirectUrl)
+            .setCSRFToken(csrfToken)
+            .setRefId(refId);
+
+        // store the token request
+        var request = await member.storeTokenRequest(tokenRequest);
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
         res.status(200).send(tokenRequestUrl);
     });
 

@@ -26,7 +26,7 @@ function createRedirectButton(transferType) {
 
     // Client side Token object for creating the Token button, handling the Token Controller, etc
     var token = new window.Token({
-        env: 'sandbox',
+        env: 'dev',
     });
 
     // get button placeholder element
@@ -60,7 +60,7 @@ function createPopupButton() {
 
     // Client side Token object for creating the Token button, handling the Token Controller, etc
     var token = new window.Token({
-        env: 'sandbox',
+        env: 'dev',
     });
 
     // get button placeholder element
@@ -77,6 +77,10 @@ function createPopupButton() {
         path = '/redeem-standing-order-popup';
     } else if (selectedTransferType === 'FUTURE_DATED') {
         path = '/redeem-future-dated-popup';
+    } else if (selectedTransferType === 'ONE_STEP') {
+        path = '/redeem-popup';
+    } else if (selectedTransferType === 'CROSS_BORDER') {
+        path = '/redeem-popup';
     } else {
         path = '/redeem-popup';
     }
@@ -117,8 +121,12 @@ function redirectTokenRequest(transferType) {
         path = '/standing-order?';
     } else if (selectedTransferType === 'FUTURE_DATED') {
         path = '/future-dated?';
+    } else if (selectedTransferType === 'ONE_STEP') {
+        path = '/one-step-payment?';
+    } else if (selectedTransferType === 'CROSS_BORDER') {
+        path = '/cross-border?';
     } else {
-        path = '/transfer?';
+        path = '/transfer?'
     }
     document.location.assign(path + queryString);
 }
@@ -131,6 +139,10 @@ function getTokenRequestUrl(done) {
         path = '/standing-order-popup';
     } else if (selectedTransferType === 'FUTURE_DATED') {
         path = '/future-dated-popup';
+    } else if (selectedTransferType === 'ONE_STEP') {
+        path = '/one-step-payment-popup';
+    } else if (selectedTransferType === 'CROSS_BORDER') {
+        path = '/cross-border-popup';
     } else {
         path = '/transfer-popup';
     }

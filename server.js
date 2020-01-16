@@ -37,10 +37,10 @@ async function init() {
         // We're using an existing merchant member. Fetch its alias (email address)
         try {
             alias = await member.firstAlias();
-        } catch (e) {
+        } catch (err) {
             console.log("Something went wrong: " + err);
             console.log("If member ID not found or firstAlias fails, `rm -r ./keys` and try again.");
-            throw e;
+            throw err;
         }
     } else {
         // Didn't find an existing merchant member. Create a new one.

@@ -43,10 +43,10 @@ function createRedirectButton(transferType) {
     // bind the Token Button to the Token Controller when ready
     tokenController.bindButtonClick(
         button, // Token Button
-        function () {
+        token.createRequest(() => {
             redirectTokenRequest(transferType) // redirect token request function
-        },
-        function (error) { // bindComplete callback
+        }),        
+        async error => { // bindComplete callback
             if (error) throw error;
             // enable button after binding
             button.enable();

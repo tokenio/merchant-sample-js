@@ -324,11 +324,11 @@ async function initServer(member, alias) {
                 legalNames: ['merchant-sample-js']
             }
         };
-        var bankId = "stet-cmci";
+        var bankId = "ngp-cbi-05034";
         var source = {
             account: {
                 sepa: {
-                    iban: "FR7610268111111111110031196"
+                    iban: "IT77O0848283352871412938123"
                 }
             },
             bankId: bankId

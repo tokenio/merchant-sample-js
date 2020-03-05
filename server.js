@@ -7,11 +7,13 @@ var cookieSession = require('cookie-session');
 var bodyParser = require('body-parser');
 var urlencodedParser = bodyParser.json({ extended: false });
 
- // See https://github.com/tokenio/sdk-js for details
+// See https://github.com/tokenio/sdk-js for details
 var TokenClient = require('@token-io/tpp').TokenClient; // main Token SDK entry object
 
- // Connect to Token's development sandbox, if you change this, you also need to change window.Token({env}) in client.js
-var Token = new TokenClient({env: 'sandbox', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys'});
+// Connect to Token's development sandbox, if you change this, you also need to change window.Token({env}) in client.js
+var Token = new TokenClient({ env: 'sandbox', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys' });
+var tokenRequestId = "";
+
 
 async function init() {
     var alias; // merchant alias
@@ -26,6 +28,7 @@ async function init() {
     } catch (x) {
         keyPaths = [];
     }
+
     if (keyPaths && keyPaths.length) {
         var keyPath = keyPaths[0];
         var mid = keyPath.replace(/_/g, ":");
@@ -38,7 +41,7 @@ async function init() {
         try {
             alias = await member.firstAlias();
         } catch (e) {
-            console.log("Something went wrong: " + err);
+            console.log("Something went wrong: " + e);
             console.log("If member ID not found or firstAlias fails, `rm -r ./keys` and try again.");
             throw e;
         }
@@ -57,7 +60,6 @@ async function init() {
         await member.setProfile({
             displayNameFirst: 'Demo Merchant'
         });
-
         await member.setProfilePicture('image/png', fs.readFileSync('southside.png'))
     }
 
@@ -83,16 +85,19 @@ async function initServer(member, alias) {
     // Endpoint for transferring, called by client side after user approval
     app.get('/transfer', async function (req, res) {
         var destination = {
-            account: {
-                fasterPayments: {
-                    sortCode: '123456',
-                    accountNumber: '12345678',
-                },
+            sepa: {
+                iban: 'bic',
+                bic: 'DE16700222000072880129'
             },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
         };
+
         var queryData = req.query;
-        var nonce = Token.Util.generateNonce();
-        req.session.nonce = nonce;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
         var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem';
 
         // set up the TokenRequest
@@ -100,10 +105,10 @@ async function initServer(member, alias) {
             .setDescription(queryData.description)
             .setToAlias(alias)
             .setToMemberId(member.memberId())
-            .addDestination(destination)
+            .addTransferDestination(destination)
             .setRedirectUrl(redirectUrl)
-            .setCallbackState({a: 1}) // arbitrary data
-            .setCSRFToken(nonce);
+            .setCSRFToken(csrfToken)
+            .setRefId(refId);
 
         // store the token request
         var request = await member.storeTokenRequest(tokenRequest)
@@ -115,16 +120,283 @@ async function initServer(member, alias) {
     // Endpoint for transferring, called by client side after user approval
     app.post('/transfer-popup', urlencodedParser, async function (req, res) {
         var destination = {
-            account: {
-                fasterPayments: {
-                    sortCode: '123456',
-                    accountNumber: '12345678',
-                },
+            sepa: {
+                iban: 'bic',
+                bic: 'DE16700222000072880129'
             },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
         };
+
         var form = req.body;
-        var nonce = Token.Util.generateNonce();
-        req.session.nonce = nonce;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-popup';
+
+        // set up the TokenRequest
+        var tokenRequest = Token.createTransferTokenRequest(form.amount, form.currency)
+            .setDescription(form.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .addTransferDestination(destination)
+            .setRedirectUrl(redirectUrl)
+            .setCSRFToken(csrfToken)
+            .setRefId(refId);
+
+        // store the token request
+        var request = await member.storeTokenRequest(tokenRequest);
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        res.status(200).send(tokenRequestUrl);
+    });
+
+    app.get('/standing-order', async function (req, res) {
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-standing-order';
+        var destination = {
+            sepa: {
+                iban: 'bic',
+                bic: 'DE16700222000072880129'
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+
+        var requestData = req.query;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
+
+        var startDate = new Date().toISOString().split("T")[0];
+        var endDate = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split("T")[0];
+
+        var tokenRequest = Token.createStandingOrderTokenRequest(requestData.amount, requestData.currency, 'MNTH', startDate, endDate)
+            .addTransferDestination(destination)
+            .setDescription(requestData.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .setRedirectUrl(redirectUrl)
+            .setCSRFToken(csrfToken)
+            .setRefId(refId);
+
+        var request = await member.storeTokenRequest(tokenRequest)
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+
+        res.redirect(302, tokenRequestUrl);
+    });
+
+    app.post('/standing-order-popup', urlencodedParser, async function (req, res) {
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-standing-order-popup';
+
+        var destination = {
+            sepa: {
+                iban: 'bic',
+                bic: 'DE16700222000072880129'
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+
+        var requestData = req.body;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
+
+        var startDate = new Date().toISOString().split("T")[0];
+        var endDate = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split("T")[0];
+
+        var tokenRequest = Token.createStandingOrderTokenRequest(requestData.amount, requestData.currency, 'MNTH', startDate, endDate)
+            .addTransferDestination(destination)
+            .setDescription(requestData.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .setRedirectUrl(redirectUrl)
+            .setCSRFToken(csrfToken)
+            .setRefId(refId);
+
+        var request = await member.storeTokenRequest(tokenRequest)
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+
+        res.status(200).send(tokenRequestUrl);
+    });
+
+    app.get('/future-dated', async function (req, res) {
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-future-dated';
+
+        var destination = {
+            sepa: {
+                iban: 'bic',
+                bic: 'DE16700222000072880129'
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+
+        var requestData = req.query;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
+
+        //Setting the execution date of payment for after 2 days
+        var executionDate = new Date();
+        executionDate.setDate(new Date().getDate() + 2);
+
+        var tokenRequest = Token.createTransferTokenRequest(requestData.amount, requestData.currency)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .setDescription(requestData.description)
+            .setRedirectUrl(redirectUrl)
+            .setCSRFToken(csrfToken)
+            .setRefId(refId)
+            .setExecutionDate(executionDate.toISOString().split("T")[0])
+            .addTransferDestination(destination);
+
+        var request = await member.storeTokenRequest(tokenRequest)
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+
+        res.redirect(302, tokenRequestUrl);
+    });
+
+    app.post('/future-dated-popup', urlencodedParser, async function (req, res) {
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-future-dated-popup';
+        var destination = {
+            sepa: {
+                iban: 'bic',
+                bic: 'DE16700222000072880129'
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+
+        var requestData = req.body;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
+
+        //Setting the execution date of payment for after 2 days
+        var executionDate = new Date();
+        executionDate.setDate(new Date().getDate() + 1);
+        var tokenRequest = Token.createTransferTokenRequest(requestData.amount, requestData.currency)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .setDescription(requestData.description)
+            .setRedirectUrl(redirectUrl)
+            .setCSRFToken(csrfToken)
+            .setRefId(refId)
+            .setExecutionDate(executionDate.toISOString().split("T")[0])
+            .addTransferDestination(destination);
+
+        var request = await member.storeTokenRequest(tokenRequest)
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+
+        res.status(200).send(tokenRequestUrl);
+    });
+
+    // Endpoint for transferring, called by client side after user approval
+    app.get('/one-step-payment', async function (req, res) {
+        var transferDestination = {
+                sepa: {
+                    iban: 'DE16700222000072880129',
+                    bic: '123456'
+                },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+
+        var destination = {
+            account: {
+                sepa: {
+                    iban: 'DE16700222000072880129',
+                    bic: '123456'
+                }
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+        var bankId = "ngp-cbi-05034";
+        var source = {
+            account: {
+                sepa: {
+                    iban: "IT77O0848283352871412938123"
+                }
+            },
+            bankId: bankId
+        };
+        var queryData = req.query;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem';
+
+        // set up the TokenRequest
+        var tokenRequest = Token.createTransferTokenRequest(queryData.amount, queryData.currency)
+            .setDescription(queryData.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .addDestination(destination)
+            .setRedirectUrl(redirectUrl)
+            .setCSRFToken(csrfToken)
+            .setRefId(refId)
+            .setSource(source)
+            .setBankId(bankId)
+            .addTransferDestination(transferDestination);
+        console.log("Token Request: "+JSON.stringify(tokenRequest));
+        // store the token request
+        var request = await member.storeTokenRequest(tokenRequest)
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        res.redirect(302, tokenRequestUrl);
+    });
+
+    // Endpoint for transferring, called by client side after user approval
+    app.post('/one-step-payment-popup', urlencodedParser, async function (req, res) {
+        var transferDestination = {
+            sepa: {
+                iban: 'DE16700222000072880129',
+                bic: '123456'
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+
+        var destination = {
+            account: {
+                sepa: {
+                    iban: 'DE16700222000072880129',
+                    bic: '123456'
+                }
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+        
+        var bankId = "ngp-cbi-05034";
+        var source = {
+            account: {
+                sepa: {
+                    iban: "IT77O0848283352871412938123"
+                }
+            },
+            bankId: bankId
+        };
+
+        var form = req.body;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
         var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-popup';
 
         // set up the TokenRequest
@@ -134,8 +406,81 @@ async function initServer(member, alias) {
             .setToMemberId(member.memberId())
             .addDestination(destination)
             .setRedirectUrl(redirectUrl)
-            .setCallbackState({a: 1}) // arbitrary data
-            .setCSRFToken(nonce);
+            .setCSRFToken(csrfToken)
+            .setRefId(refId)
+            .setSource(source)
+            .setBankId(bankId)
+            .addTransferDestination(transferDestination);
+        console.log(JSON.stringify(tokenRequest))
+        // store the token request
+        var request = await member.storeTokenRequest(tokenRequest);
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        res.status(200).send(tokenRequestUrl);
+    });
+
+     // Endpoint for transferring, called by client side after user approval
+     app.get('/cross-border', async function (req, res) {
+        var destination = {
+            sepa: {
+                iban: 'bic',
+                bic: 'DE16700222000072880129'
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+
+        var queryData = req.query;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem';
+
+        // set up the TokenRequest
+        var tokenRequest = Token.createTransferTokenRequest(queryData.amount, queryData.currency)
+            .setDescription(queryData.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .addTransferDestination(destination)
+            .setRedirectUrl(redirectUrl)
+            .setCSRFToken(csrfToken)
+            .setRefId(refId);
+
+        // store the token request
+        var request = await member.storeTokenRequest(tokenRequest)
+        var requestId = request.id;
+        var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        res.redirect(302, tokenRequestUrl);
+    });
+
+    // Endpoint for transferring, called by client side after user approval
+    app.post('/cross-border-popup', urlencodedParser, async function (req, res) {
+        var destination = {
+            sepa: {
+                iban: 'bic',
+                bic: 'DE16700222000072880129'
+            },
+            customerData: {
+                legalNames: ['merchant-sample-js']
+            }
+        };
+
+        var form = req.body;
+        var refId = Token.Util.generateNonce();
+        var csrfToken = Token.Util.generateNonce();
+        req.session.csrfToken = csrfToken;
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-popup';
+
+        // set up the TokenRequest
+        var tokenRequest = Token.createTransferTokenRequest(form.amount, form.currency)
+            .setDescription(form.description)
+            .setToAlias(alias)
+            .setToMemberId(member.memberId())
+            .addTransferDestination(destination)
+            .setRedirectUrl(redirectUrl)
+            .setCSRFToken(csrfToken)
+            .setRefId(refId);
 
         // store the token request
         var request = await member.storeTokenRequest(tokenRequest);
@@ -143,12 +488,12 @@ async function initServer(member, alias) {
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
         res.status(200).send(tokenRequestUrl);
     });
-    
+
     // for redirect flow, use Token.parseTokenRequestCallbackUrl()
     app.get('/redeem', urlencodedParser, async function (req, res) {
         //get the token ID from the callback url
         var callbackUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
-        var result = await Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.nonce);
+        var result = await Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.csrfToken);
         var token = await member.getToken(result.tokenId);
         //Redeem the token to move the funds
         var transfer = await member.redeemToken(token);
@@ -161,13 +506,90 @@ async function initServer(member, alias) {
     app.get('/redeem-popup', urlencodedParser, async function (req, res) {
         //get the token ID from the callback url
         var data = req.query.data;
-        var result = await Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.nonce);
+        var result = await Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.csrfToken);
         var token = await member.getToken(result.tokenId);
         //Redeem the token to move the funds
         var transfer = await member.redeemToken(token);
         console.log('\n Redeem Token Response:', transfer);
         res.status(200);
         res.send('Success! Redeemed transfer ' + transfer.id);
+    });
+
+    app.get('/redeem-standing-order', urlencodedParser, async function (req, res) {
+        //get the token ID from the callback url
+        var callbackUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+        var result = await Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.csrfToken);
+
+        var standingOrderSubmission = await member.redeemStandingOrderToken(result.tokenId);
+
+        console.log('\n Redeem Token Response:', JSON.stringify(standingOrderSubmission));
+        res.status(200);
+        res.send('Success! Redeemed transfer ' + standingOrderSubmission.tokenId);
+    });
+
+    app.get('/redeem-standing-order-popup', urlencodedParser, async function (req, res) {
+        //get the token ID from the callback url
+        debugger;
+        var data = req.query.data;
+        var result = await Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.csrfToken);
+
+        var standingOrderSubmission = await member.redeemStandingOrderToken(result.tokenId);
+
+        console.log('\n Redeem Token Response:', JSON.stringify(standingOrderSubmission));
+        res.status(200);
+        res.send('Success! Redeemed transfer ' + standingOrderSubmission.tokenId);
+    });
+
+    app.get('/redeem-future-dated', urlencodedParser, async function (req, res) {
+        //get the token ID from the callback url
+        var callbackUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+        var result = await Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.csrfToken);
+
+        var token = await member.getToken(result.tokenId);
+
+        //Redeem the token to move the funds
+        var transfer = await member.redeemToken(token);
+
+        console.log('\n Redeem Token Response:', JSON.stringify(transfer));
+        res.status(200);
+        res.send('Success! Redeemed transfer ' + transfer.id);
+    });
+
+    app.get('/redeem-future-dated-popup', urlencodedParser, async function (req, res) {
+        //get the token ID from the callback url
+        var data = req.query.data;
+        var result = await Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.csrfToken);
+        var token = await member.getToken(result.tokenId);
+        //Redeem the token to move the funds
+        var transfer = await member.redeemToken(token);
+        console.log('\n Redeem Token Response:', transfer);
+        res.status(200);
+        res.send('Success! Redeemed transfer ' + transfer.id);
+    });
+
+    app.get('/redeem-standing-order', urlencodedParser, async function (req, res) {
+        //get the token ID from the callback url
+        var callbackUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+        var result = await Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.csrfToken);
+
+        var standingOrderSubmission = await member.redeemStandingOrderToken(result.tokenId);
+
+        console.log('\n Redeem Token Response:', JSON.stringify(standingOrderSubmission));
+        res.status(200);
+        res.send('Success! Redeemed transfer ' + standingOrderSubmission.tokenId);
+    });
+
+    app.get('/redeem-standing-order-popup', urlencodedParser, async function (req, res) {
+        //get the token ID from the callback url
+        debugger;
+        var data = req.query.data;
+        var result = await Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.csrfToken);
+
+        var standingOrderSubmission = await member.redeemStandingOrderToken(result.tokenId);
+
+        console.log('\n Redeem Token Response:', JSON.stringify(standingOrderSubmission));
+        res.status(200);
+        res.send('Success! Redeemed transfer ' + standingOrderSubmission.tokenId);
     });
 
     app.use(express.static(__dirname));

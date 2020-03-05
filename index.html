@@ -1,20 +1,36 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Merchant Sample - JavaScript</title>
-        <link rel="stylesheet" type="text/css" href="/style.css"  />
-    </head>
-    <body>
-        <div class="buttonTypeSelector">
-            Desktop mode:
-            <label for="buttonTypeRedirect">Redirect (default)</label>
-            <input type="radio" id="buttonTypeRedirect" name="buttonTypeSelector" value="REDIRECT" checked />
-            <label for="buttonTypePopup">Popup</label>
-            <input type="radio" id="buttonTypePopup" name="buttonTypeSelector" value="POPUP" />
-            <small>* Mobile is always redirect</small>
-        </div>
-        <div id="tokenPayBtn"></div>
-        <script src="https://web-app.sandbox.token.io/token.js"></script>
-        <script src="/client.js"></script>
-    </body>
+
+<head>
+    <title>Merchant Sample - Js</title>
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+</head>
+
+<body>
+    <div class="buttonTypeSelector">
+        Desktop mode:
+        <label for="buttonTypeRedirect">Redirect (default)</label>
+        <input type="radio" id="buttonTypeRedirect" name="buttonTypeSelector" value="REDIRECT" checked />
+        <label for="buttonTypePopup">Popup</label>
+        <input type="radio" id="buttonTypePopup" name="buttonTypeSelector" value="POPUP" />
+        <small>* Mobile is always redirect</small>
+    </div>
+    <div class="transferTypeSelector">
+        Select transfer type:
+        <label for="transferTypeSingleImmediate">Single Immediate Transfer (default)</label>
+        <input type="radio" id="transferTypeSingleImmediate" name="transferTypeSelector" value="SINGLE_IMMEDIATE" checked />
+        <label for="transferTypeOneStep">One Step Payment</label>
+        <input type="radio" id="transferTypeOneStep" name="transferTypeSelector" value="ONE_STEP" />
+        <label for="transferTypeFutureDated">Future Dated</label>
+        <input type="radio" id="transferTypeFutureDated" name="transferTypeSelector" value="FUTURE_DATED" />
+        <label for="transferTypeStandingOrder">Standing Order</label>
+        <input type="radio" id="transferTypeStandingOrder" name="transferTypeSelector" value="STANDING_ORDER" />
+        <label for="transferTypeCrossBorder">Cross Border</label>
+        <input type="radio" id="transferTypeCrossBorder" name="transferTypeSelector" value="CROSS_BORDER" />
+    </div>
+    <div id="tokenPayBtn"></div>
+    <script src="https://web-app.sandbox.token.io/token.js"></script>
+    <script src="/client.js"></script>
+</body>
+
 </html>

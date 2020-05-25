@@ -596,9 +596,7 @@ async function initServer(member, alias) {
 
     app.get('/callback', urlencodedParser, async function (req, res){
         var redirectUrl = req.protocol + '://' + req.get('host') + req.url;
-        console.log('object', req.protocol + '://' + req.get('host'))
         var queryData = Token.parseSetTransferDestinationsUrl(redirectUrl);
-        console.log('object', queryData.supportedTransferDestinationTypes)
         if (queryData.supportedTransferDestinationTypes && queryData.supportedTransferDestinationTypes.includes('SEPA')) {
             var destination = [
                 {

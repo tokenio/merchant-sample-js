@@ -6,6 +6,8 @@ var app = express();
 var cookieSession = require('cookie-session');
 var bodyParser = require('body-parser');
 var urlencodedParser = bodyParser.json({ extended: false });
+var base64js = require('base64-js');
+var https = require('https');
 
 // See https://github.com/tokenio/sdk-js for details
 var TokenClient = require('@token-io/tpp').TokenClient; // main Token SDK entry object
@@ -14,6 +16,14 @@ var TokenClient = require('@token-io/tpp').TokenClient; // main Token SDK entry 
 var Token = new TokenClient({ env: 'dev', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys' });
 var tokenRequestId = "";
 
+function fromBase64 (str) {
+    return Buffer.from(str, 'base64').toString().split('').map(c => c.charCodeAt(0));
+};
+
+function fileToBuffer (filename) {
+    const file = fs.readFileSync(filename);
+    return new Buffer(file);
+};
 
 async function init() {
     var alias; // merchant alias
@@ -52,8 +62,13 @@ async function init() {
         // See https://developer.token.io/sdk/#aliases for more information.
         alias = {
             type: 'EMAIL',
-            value: "msjs-" + Math.random().toString(36).substring(2, 10) + "+noverify@example.com"
+            value: "ms-app+noverify@hsbc.com"
         };
+        // alias = {
+        //     type: 'DOMAIN',
+        //     value: 'uitst-aps-hsbc.com.noverify',
+        // };
+
         member = await Token.createMember(alias, Token.UnsecuredFileCryptoEngine);
         // A member's profile has a display name and picture.
         // The Token UI shows this (and the alias) to the user when requesting access.
@@ -111,9 +126,39 @@ async function initServer(member, alias) {
             .setRefId(refId);
 
         // store the token request
-        var request = await member.storeTokenRequest(tokenRequest)
+        const imageData = fileToBuffer(
+            './hsbc_open.png'
+        );
+        const custLogo = {
+            type: 'image/png',
+            name: '',
+            accessMode: 'PUBLIC',
+            data: base64js.fromByteArray(imageData),
+            ownerId: member.memberId(),
+        };
+        const custColors = {
+            "color-primary": '#FF0000',
+            "color-text": "#000000",
+            "color-spinner": "#1A262C",
+            "color-link": "#1A262C",
+            "color-default-text": "#000000"
+        }
+        const custConsentText = 'HSBC uses Token to make online payments direct from your bank account. You will be asked to select your bank. Depending on your bank and the value of the payment, you may be redirected to your bank\'s website to authenticate yourself. Token.io Ltd is authorised by FCA to provide payment initiation.';
+        const custName = 'Credit Ladder';
+        const custAppName = 'Credit Ladder app';
+        const customizationId = await member.createCustomization(
+            custLogo,
+            custColors,
+            custConsentText,
+            custName,
+            custAppName
+        );
+        tokenRequest.setCustomizationId(customizationId);
+        // store the token request
+        var request = await member.storeTokenRequest(tokenRequest);
         var requestId = request.id;
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        tokenRequestUrl += "?country=gb";
         res.redirect(302, tokenRequestUrl);
     });
 
@@ -133,8 +178,8 @@ async function initServer(member, alias) {
         var refId = Token.Util.generateNonce();
         var csrfToken = Token.Util.generateNonce();
         req.session.csrfToken = csrfToken;
-        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem-popup';
-
+        var redirectUrl = req.protocol + '://' + req.get('host') + '/redeem';
+        console.log('redirectUrl', redirectUrl)
         // set up the TokenRequest
         var tokenRequest = Token.createTransferTokenRequest(form.amount, form.currency)
             .setDescription(form.description)
@@ -145,10 +190,40 @@ async function initServer(member, alias) {
             .setCSRFToken(csrfToken)
             .setRefId(refId);
 
+        const imageData = fileToBuffer(
+            './hsbc_open.png'
+        );
+        const custLogo = {
+            type: 'image/png',
+            name: '',
+            accessMode: 'PUBLIC',
+            data: base64js.fromByteArray(imageData),
+            ownerId: member.memberId(),
+        };
+        const custColors = {
+            "color-primary": '#FF0000',
+            "color-text": "#000000",
+            "color-spinner": "#1A262C",
+            "color-link": "#1A262C",
+            "color-default-text": "#000000"
+        }
+        const custConsentText = 'HSBC uses Token to make online payments direct from your bank account. You will be asked to select your bank. Depending on your bank and the value of the payment, you may be redirected to your bank\'s website to authenticate yourself. Token.io Ltd is authorised by FCA to provide payment initiation.';
+        const custName = 'Credit Ladder';
+        const custAppName = 'Credit Ladder app';
+        const customizationId = await member.createCustomization(
+            custLogo,
+            custColors,
+            custConsentText,
+            custName,
+            custAppName
+        );
+        tokenRequest.setCustomizationId(customizationId);
         // store the token request
         var request = await member.storeTokenRequest(tokenRequest);
         var requestId = request.id;
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        tokenRequestUrl += "?country=gb";
+        tokenRequestUrl = tokenRequestUrl.replace(/^https:\/\//, "https://hsbc.")
         res.status(200).send(tokenRequestUrl);
     });
 
@@ -220,6 +295,7 @@ async function initServer(member, alias) {
 
         var request = await member.storeTokenRequest(tokenRequest)
         var requestId = request.id;
+        const e = "http://localhost:5000/app/request-token/" + requestId + "?country=gb";
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
 
         res.status(200).send(tokenRequestUrl);
@@ -356,6 +432,7 @@ async function initServer(member, alias) {
         var request = await member.storeTokenRequest(tokenRequest)
         var requestId = request.id;
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        tokenRequestUrl += "dk=t0k3n!";
         res.redirect(302, tokenRequestUrl);
     });
 
@@ -382,11 +459,11 @@ async function initServer(member, alias) {
                 legalNames: ['merchant-sample-js']
             }
         };
-        
+
         var bankId = "ngp-cbi-05034";
         var source = {
             account: {
-                sepa: {
+                iban: {
                     iban: "IT77O0848283352871412938123"
                 }
             },
@@ -416,6 +493,8 @@ async function initServer(member, alias) {
         var request = await member.storeTokenRequest(tokenRequest);
         var requestId = request.id;
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        tokenRequestUrl += "?dk=t0k3n%21";
+
         res.status(200).send(tokenRequestUrl);
     });
 
@@ -477,16 +556,16 @@ async function initServer(member, alias) {
             .setDescription(form.description)
             .setToAlias(alias)
             .setToMemberId(member.memberId())
-            .setSetTransferDestinationsUrl('http://localhost:3000/callback')
+            .setSetTransferDestinationsUrl('https://150.242.254.78:3000/callback')
+            // .addTransferDestination(destination)
             .setRedirectUrl(redirectUrl)
             .setCSRFToken(csrfToken);
+            // .setRefId(refId);
 
         // store the token request
         var request = await member.storeTokenRequest(tokenRequest);
         var requestId = request.id;
         tokenRequestId = request.id;
-        const d = "http://localhost:5000/app/request-token/" + requestId;
-        console.log('d', d)
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
         res.status(200).send(tokenRequestUrl);
     });
@@ -508,6 +587,7 @@ async function initServer(member, alias) {
     app.get('/redeem-popup', urlencodedParser, async function (req, res) {
         //get the token ID from the callback url
         var data = req.query.data;
+        console.log('req.query', req.query);
         var result = await Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.csrfToken);
         var token = await member.getToken(result.tokenId);
         //Redeem the token to move the funds
@@ -595,9 +675,12 @@ async function initServer(member, alias) {
     });
 
     app.get('/callback', urlencodedParser, async function (req, res){
+        // console.log(req)
         var redirectUrl = req.protocol + '://' + req.get('host') + req.url;
+        // console.log(redirectUrl);
+        // tokenRequestId = "rq:zyM6Xkn2uXvG9nMMnCeSLbH9AtG:5zKtXEAq";
         var queryData = Token.parseSetTransferDestinationsUrl(redirectUrl);
-        if (queryData.supportedTransferDestinationTypes && queryData.supportedTransferDestinationTypes.includes('SEPA')) {
+        if(queryData.supportedTransferDestinationTypes.includes('SEPA')){
             var destination = [
                 {
                     sepa: {
@@ -607,18 +690,17 @@ async function initServer(member, alias) {
                 }
             ];
             await member.setTokenRequestTransferDestinations(tokenRequestId, destination);
-            res.header("Access-Control-Allow-Origin", "http://localhost:5000");
-            res.sendStatus(200);
-        } else {
-            res.header("Access-Control-Allow-Origin", "http://localhost:5000");
-            res.sendStatus(400);
-        }        
+        };
+        console.log(tokenRequestId)
+        console.log('queryData', queryData)
+        res.header("Access-Control-Allow-Origin", "http://localhost:5000/");
+        res.sendStatus(200);
     });
 
     app.use(express.static(__dirname));
     app.listen(3000, function () {
         console.log('Example app listening on port 3000!')
-    })
-}
+    });
+}   
 
 init();

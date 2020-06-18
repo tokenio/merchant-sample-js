@@ -11,7 +11,7 @@ var urlencodedParser = bodyParser.json({ extended: false });
 var TokenClient = require('@token-io/tpp').TokenClient; // main Token SDK entry object
 
 // Connect to Token's development sandbox, if you change this, you also need to change window.Token({env}) in client.js
-var Token = new TokenClient({ env: 'dev', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys' });
+var Token = new TokenClient({ env: 'sandbox', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys' });
 var tokenRequestId = "";
 
 
@@ -327,7 +327,7 @@ async function initServer(member, alias) {
         var bankId = "ngp-cbi-05034";
         var source = {
             account: {
-                sepa: {
+                iban: {
                     iban: "IT77O0848283352871412938123"
                 }
             },
@@ -356,6 +356,7 @@ async function initServer(member, alias) {
         var request = await member.storeTokenRequest(tokenRequest)
         var requestId = request.id;
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        tokenRequestUrl += "?dk=smartym";
         res.redirect(302, tokenRequestUrl);
     });
 
@@ -386,7 +387,7 @@ async function initServer(member, alias) {
         var bankId = "ngp-cbi-05034";
         var source = {
             account: {
-                sepa: {
+                iban: {
                     iban: "IT77O0848283352871412938123"
                 }
             },
@@ -416,6 +417,7 @@ async function initServer(member, alias) {
         var request = await member.storeTokenRequest(tokenRequest);
         var requestId = request.id;
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        tokenRequestUrl += "dk=smartym";
         res.status(200).send(tokenRequestUrl);
     });
 

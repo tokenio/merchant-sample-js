@@ -108,7 +108,7 @@ function createTokenButton(type) {
 
     // Client side Token object for creating the Token button, handling the Token Controller, etc
     var token = new window.Token({
-        env: 'dev',
+        env: 'sandbox',
     });
 
     // get button placeholder element

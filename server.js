@@ -383,7 +383,7 @@ async function initServer(member, alias) {
                 legalNames: ['merchant-sample-js']
             }
         };
-        
+
         var bankId = "ngp-cbi-05034";
         var source = {
             account: {
@@ -487,8 +487,6 @@ async function initServer(member, alias) {
         var request = await member.storeTokenRequest(tokenRequest);
         var requestId = request.id;
         tokenRequestId = request.id;
-        const d = "http://localhost:5000/app/request-token/" + requestId;
-        console.log('d', d)
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
         res.status(200).send(tokenRequestUrl);
     });
@@ -614,7 +612,7 @@ async function initServer(member, alias) {
         } else {
             res.header("Access-Control-Allow-Origin", "http://localhost:5000");
             res.sendStatus(400);
-        }        
+        }
     });
 
     app.use(express.static(__dirname));

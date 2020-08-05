@@ -608,7 +608,6 @@ async function initServer(member, alias) {
                 }
             ];
             await member.setTokenRequestTransferDestinations(tokenRequestId, destination);
-            TokenClient.
             res.header("Access-Control-Allow-Origin", "https://web-app.sandbox.token.io");
             res.sendStatus(200);
         } else {

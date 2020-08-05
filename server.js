@@ -444,7 +444,7 @@ async function initServer(member, alias) {
             .setDescription(queryData.description)
             .setToAlias(alias)
             .setToMemberId(member.memberId())
-            .addTransferDestination(destination)
+            .setSetTransferDestinationsUrl('http://localhost:3000/callback')
             .setRedirectUrl(redirectUrl)
             .setCSRFToken(csrfToken)
             .setRefId(refId);
@@ -452,6 +452,7 @@ async function initServer(member, alias) {
         // store the token request
         var request = await member.storeTokenRequest(tokenRequest)
         var requestId = request.id;
+        tokenRequestId = request.id;
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
         res.redirect(302, tokenRequestUrl);
     });
@@ -607,10 +608,11 @@ async function initServer(member, alias) {
                 }
             ];
             await member.setTokenRequestTransferDestinations(tokenRequestId, destination);
-            res.header("Access-Control-Allow-Origin", "http://localhost:5000");
+            TokenClient.
+            res.header("Access-Control-Allow-Origin", "https://web-app.sandbox.token.io");
             res.sendStatus(200);
         } else {
-            res.header("Access-Control-Allow-Origin", "http://localhost:5000");
+            res.header("Access-Control-Allow-Origin", "https://web-app.sandbox.token.io");
             res.sendStatus(400);
         }
     });

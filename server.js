@@ -327,7 +327,7 @@ async function initServer(member, alias) {
         var bankId = "ngp-cbi-05034";
         var source = {
             account: {
-                sepa: {
+                iban: {
                     iban: "IT77O0848283352871412938123"
                 }
             },
@@ -356,6 +356,7 @@ async function initServer(member, alias) {
         var request = await member.storeTokenRequest(tokenRequest)
         var requestId = request.id;
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        tokenRequestUrl += "?dk=smartym";
         res.redirect(302, tokenRequestUrl);
     });
 
@@ -382,11 +383,11 @@ async function initServer(member, alias) {
                 legalNames: ['merchant-sample-js']
             }
         };
-        
+
         var bankId = "ngp-cbi-05034";
         var source = {
             account: {
-                sepa: {
+                iban: {
                     iban: "IT77O0848283352871412938123"
                 }
             },
@@ -416,6 +417,7 @@ async function initServer(member, alias) {
         var request = await member.storeTokenRequest(tokenRequest);
         var requestId = request.id;
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
+        tokenRequestUrl += "dk=smartym";
         res.status(200).send(tokenRequestUrl);
     });
 
@@ -442,7 +444,7 @@ async function initServer(member, alias) {
             .setDescription(queryData.description)
             .setToAlias(alias)
             .setToMemberId(member.memberId())
-            .addTransferDestination(destination)
+            .setSetTransferDestinationsUrl('http://localhost:3000/callback')
             .setRedirectUrl(redirectUrl)
             .setCSRFToken(csrfToken)
             .setRefId(refId);
@@ -450,6 +452,7 @@ async function initServer(member, alias) {
         // store the token request
         var request = await member.storeTokenRequest(tokenRequest)
         var requestId = request.id;
+        tokenRequestId = request.id;
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
         res.redirect(302, tokenRequestUrl);
     });
@@ -477,14 +480,14 @@ async function initServer(member, alias) {
             .setDescription(form.description)
             .setToAlias(alias)
             .setToMemberId(member.memberId())
-            .addTransferDestination(destination)
+            .setSetTransferDestinationsUrl('http://localhost:3000/callback')
             .setRedirectUrl(redirectUrl)
-            .setCSRFToken(csrfToken)
-            .setRefId(refId);
+            .setCSRFToken(csrfToken);
 
         // store the token request
         var request = await member.storeTokenRequest(tokenRequest);
         var requestId = request.id;
+        tokenRequestId = request.id;
         var tokenRequestUrl = Token.generateTokenRequestUrl(requestId);
         res.status(200).send(tokenRequestUrl);
     });
@@ -590,6 +593,27 @@ async function initServer(member, alias) {
         console.log('\n Redeem Token Response:', JSON.stringify(standingOrderSubmission));
         res.status(200);
         res.send('Success! Redeemed transfer ' + standingOrderSubmission.tokenId);
+    });
+
+    app.get('/callback', urlencodedParser, async function (req, res){
+        var redirectUrl = req.protocol + '://' + req.get('host') + req.url;
+        var queryData = Token.parseSetTransferDestinationsUrl(redirectUrl);
+        if (queryData.supportedTransferDestinationTypes && queryData.supportedTransferDestinationTypes.includes('SEPA')) {
+            var destination = [
+                {
+                    sepa: {
+                        iban: 'DE16700222000072880129',
+                        bic: '123456'
+                    }
+                }
+            ];
+            await member.setTokenRequestTransferDestinations(tokenRequestId, destination);
+            res.header("Access-Control-Allow-Origin", "https://web-app.sandbox.token.io");
+            res.sendStatus(200);
+        } else {
+            res.header("Access-Control-Allow-Origin", "https://web-app.sandbox.token.io");
+            res.sendStatus(400);
+        }
     });
 
     app.use(express.static(__dirname));

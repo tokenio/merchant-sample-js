@@ -51,7 +51,7 @@ async function init() {
         // with the domain and member ID for verification.
         // See https://developer.token.io/sdk/#aliases for more information.
         alias = {
-            type: 'EMAIL',
+            type: 'DOMAIN',
             value: "msjs-" + Math.random().toString(36).substring(2, 10) + "+noverify@example.com"
         };
         member = await Token.createMember(alias, Token.UnsecuredFileCryptoEngine);
@@ -383,6 +383,7 @@ async function initServer(member, alias) {
             }
         };
         
+
         var bankId = "ngp-cbi-05034";
         var source = {
             account: {

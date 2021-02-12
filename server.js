@@ -568,31 +568,6 @@ async function initServer(member, alias) {
         res.send('Success! Redeemed transfer ' + transfer.id);
     });
 
-    app.get('/redeem-standing-order', urlencodedParser, async function (req, res) {
-        //get the token ID from the callback url
-        var callbackUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
-        var result = await Token.parseTokenRequestCallbackUrl(callbackUrl, req.session.csrfToken);
-
-        var standingOrderSubmission = await member.redeemStandingOrderToken(result.tokenId);
-
-        console.log('\n Redeem Token Response:', JSON.stringify(standingOrderSubmission));
-        res.status(200);
-        res.send('Success! Redeemed transfer ' + standingOrderSubmission.tokenId);
-    });
-
-    app.get('/redeem-standing-order-popup', urlencodedParser, async function (req, res) {
-        //get the token ID from the callback url
-        debugger;
-        var data = req.query.data;
-        var result = await Token.parseTokenRequestCallbackParams(JSON.parse(data), req.session.csrfToken);
-
-        var standingOrderSubmission = await member.redeemStandingOrderToken(result.tokenId);
-
-        console.log('\n Redeem Token Response:', JSON.stringify(standingOrderSubmission));
-        res.status(200);
-        res.send('Success! Redeemed transfer ' + standingOrderSubmission.tokenId);
-    });
-
     app.use(express.static(__dirname));
     app.listen(3000, function () {
         console.log('Example app listening on port 3000!')

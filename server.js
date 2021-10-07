@@ -11,7 +11,7 @@ var urlencodedParser = bodyParser.json({ extended: false });
 var TokenClient = require('@token-io/tpp').TokenClient; // main Token SDK entry object
 
 // Connect to Token's development sandbox, if you change this, you also need to change window.Token({env}) in client.js
-var Token = new TokenClient({ env: 'sandbox', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys' });
+var Token = new TokenClient({ env: 'dev', developerKey: '4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', keyDir: './keys' });
 var tokenRequestId = "";
 
 
@@ -121,8 +121,8 @@ async function initServer(member, alias) {
     app.post('/transfer-popup', urlencodedParser, async function (req, res) {
         var destination = {
             sepa: {
-                iban: 'bic',
-                bic: 'DE16700222000072880129'
+                iban: 'HU82120010080010059401000004',
+                bic: '12345'
             },
             customerData: {
                 legalNames: ['merchant-sample-js']

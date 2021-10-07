@@ -34,3 +34,9 @@ body {
     cursor: pointer;
     margin-left: 10px;
 }
+
+#tokenWebAppIframe {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

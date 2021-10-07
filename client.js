@@ -99,6 +99,8 @@ function createTokenRequestButton(selectedMode) {
         createTokenButton('POPUP')
     } else if (selectedMode === 'REDIRECT') {
         createTokenButton('REDIRECT');
+    } else if (selectedMode === 'IFRAME') {
+        createTokenButton('IFRAME');
     }
 }
 
@@ -108,19 +110,27 @@ function createTokenButton(type) {
 
     // Client side Token object for creating the Token button, handling the Token Controller, etc
     var token = new window.Token({
-        env: 'sandbox',
+        env: 'dev',
     });
 
     // get button placeholder element
     var element = document.getElementById('tokenPayBtn');
-    const webapp = type === 'POPUP' ? true : false;
+
+    var webAppIframeEl = document.getElementById('tokenWebAppIframe');
+
+    const webapp = type === 'REDIRECT' ? null : type;
+
+    const webAppIframe = () => token.createTokenWebAppIframe(webAppIframeEl, {
+        height: '610px',
+        width: '500px',
+    });
 
     // create the button
     button = token.createTokenButton(element, {
         label: 'Token Quick Checkout',
     });
 
-    var path = (type === 'POPUP') ? tokenPopupPath() : tokenRedirectPath();
+    var path = (type === 'POPUP' || type === 'IFRAME') ? tokenPopupPath() : tokenRedirectPath();
     var queryString = Object.keys(data).map(key => key + '=' + window.encodeURIComponent(data[key])).join('&');
 
     tokenController = token.createController({
@@ -129,8 +139,10 @@ function createTokenButton(type) {
             var successURL = `${redeemTokenPopUp()}?data=${window.encodeURIComponent(JSON.stringify(data))}`;
             // navigate to success URL
             window.location.assign(successURL);
+            button.enable();
         },
         onError: function (error) { // Failure Callback
+            button.enable();
             throw error;
         },
     });
@@ -168,7 +180,8 @@ function createTokenButton(type) {
             button.enable();
         },
         { // options
-            desktop: webapp ? 'POPUP' : 'REDIRECT',
+            desktop: webapp ? webapp : 'REDIRECT',
+            webAppIframe,
         }
     );
 }

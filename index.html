@@ -13,6 +13,8 @@
         <input type="radio" id="buttonTypeRedirect" name="buttonTypeSelector" value="REDIRECT" checked />
         <label for="buttonTypePopup">Popup</label>
         <input type="radio" id="buttonTypePopup" name="buttonTypeSelector" value="POPUP" />
+        <label for="buttonTypeIframe">Iframe</label>
+        <input type="radio" id="buttonTypeIframe" name="buttonTypeSelector" value="IFRAME" />
         <small>* Mobile is always redirect</small>
     </div>
     <div class="transferTypeSelector">
@@ -29,7 +31,8 @@
         <input type="radio" id="transferTypeCrossBorder" name="transferTypeSelector" value="CROSS_BORDER" />
     </div>
     <div id="tokenPayBtn"></div>
-    <script src="https://web-app.sandbox.token.io/token.js"></script>
+    <div id="tokenWebAppIframe"></div>
+    <script src="http://localhost:5000/token.js"></script>
     <script src="/client.js"></script>
 </body>
 

@@ -3,8 +3,25 @@ body {
     font-family: sans-serif;
 }
 
-#tokenPayBtn {
-    width: 230px;
+.CustomTokenButton {
+    border: 0;
+    font-family: sans-serif;
+    background-color: rgba(28, 15, 54, 1);
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 12px 24px;
+    transition: background-color 350ms;
+}
+
+.CustomTokenButton:hover {
+    background-color: #605772;
+}
+
+.CustomTokenButton:active {
+    opacity: 0.8;
 }
 
 .buttonTypeSelector {

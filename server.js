@@ -8,10 +8,10 @@ var bodyParser = require('body-parser');
 var urlencodedParser = bodyParser.json({ extended: false });
 var fetch = require('node-fetch');
 
-var TOKEN_REQUEST_URL = 'https://api.stg.token.io/token-requests';
-var TOKEN_APP_URL = 'https://app.stg.token.io/session';
-var AUTH_HEADER = 'Basic bS0zUUhvaWEzaDF0bnNlNUxhdFVoWE1VRG5xQ01NLTV6S3RYRUFxOmZjNmQ4OTgxLWIzYzgtNGY1ZC04MTVkLWZiNDQxNDQxNWZlYw==';
-var MEMBER_ID = 'm:3QHoia3h1tnse5LatUhXMUDnqCMM:5zKtXEAq';
+var TOKEN_REQUEST_URL = 'https://api.sandbox.token.io/token-requests';
+var TOKEN_APP_URL = 'https://app.sandbox.token.io/session';
+var AUTH_HEADER = 'Basic bS0zYTNEUktZeVVzS1oyZUdmeWpVczlNWk5TdDlzLTV6S3RYRUFxOjhjOWIwMDY3LTE0YmItNDdhYi1iMDdkLWVlMDM3NDE2MjllYw==';
+var MEMBER_ID = 'm:3a3DRKYyUsKZ2eGfyjUs9MZNSt9s:5zKtXEAq';
 
 app.use(cookieSession({
     name: 'session',
